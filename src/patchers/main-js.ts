@@ -9,7 +9,8 @@ export function isPatched(content: string): boolean {
 }
 
 export function patch(filePath: string, effect: EffectType): boolean {
-  let content = fs.readFileSync(filePath, "utf-8");
+  const original = fs.readFileSync(filePath, "utf-8");
+  let content = original;
   if (isPatched(content)) {
     content = doUnpatch(content);
   }
@@ -62,6 +63,10 @@ export function patch(filePath: string, effect: EffectType): boolean {
     );
   }
 
+  // Unchanged: nothing to write, and nothing to reload for (returns false).
+  if (content === original) {
+    return false;
+  }
   fs.writeFileSync(filePath, content, "utf-8");
   return true;
 }

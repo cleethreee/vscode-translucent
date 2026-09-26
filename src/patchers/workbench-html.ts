@@ -32,12 +32,17 @@ function stripExisting(content: string): string {
 }
 
 export function patch(filePath: string, options?: CSSOptions | number): boolean {
-  let content = fs.readFileSync(filePath, "utf-8");
+  const original = fs.readFileSync(filePath, "utf-8");
+  let content = original;
   content = stripExisting(content);
   if (!content.includes("</head>")) {
     throw new Error("Could not find </head> in workbench.html");
   }
   content = content.replace("</head>", `${getStyleBlock(options)}\n\t</head>`);
+  // Unchanged: nothing to write, and nothing to reload for (returns false).
+  if (content === original) {
+    return false;
+  }
   fs.writeFileSync(filePath, content, "utf-8");
   return true;
 }

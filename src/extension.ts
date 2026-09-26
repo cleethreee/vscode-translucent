@@ -37,9 +37,16 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
 
   try {
     const config = getConfig();
-    mainJs.patch(paths.mainJs, config.effect);
-    workbenchHtml.patch(paths.workbenchHtml, config);
-    workbenchJs.patch(paths.workbenchJs);
+    // Only ask for a reload when the patch actually changed something (a new version with the same styles
+    // doesn't need a second reload).
+    const changed = [
+      mainJs.patch(paths.mainJs, config.effect),
+      workbenchHtml.patch(paths.workbenchHtml, config),
+      workbenchJs.patch(paths.workbenchJs),
+    ].some(Boolean);
+    if (!changed) {
+      return;
+    }
 
     const selection = await vscode.window.showInformationMessage(
       "Translucent updated. Reload window to apply changes.",
@@ -98,7 +105,9 @@ export function activate(context: vscode.ExtensionContext) {
           if (fs.existsSync(paths.mainJs)) {
             const content = fs.readFileSync(paths.mainJs, "utf-8");
             if (mainJs.isPatched(content)) {
-              mainJs.patch(paths.mainJs, config.effect);
+              if (!mainJs.patch(paths.mainJs, config.effect)) {
+                return;
+              }
               vscode.window.showInformationMessage(
                 "Translucent effect updated. A full restart is required.",
               );
@@ -114,7 +123,9 @@ export function activate(context: vscode.ExtensionContext) {
         if (fs.existsSync(paths.workbenchHtml)) {
           const content = fs.readFileSync(paths.workbenchHtml, "utf-8");
           if (workbenchHtml.isPatched(content)) {
-            workbenchHtml.patch(paths.workbenchHtml, config);
+            if (!workbenchHtml.patch(paths.workbenchHtml, config)) {
+              return;
+            }
             const selection = await vscode.window.showInformationMessage(
               "Translucent appearance updated. Reload window to apply changes.",
               "Reload Window",

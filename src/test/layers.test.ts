@@ -98,3 +98,15 @@ describe("layers: settings page", () => {
     assert.ok(on.includes("background-color: #221716d9 !important"));
   });
 });
+
+describe("reload prompts", () => {
+  it("a patch that changes nothing reports false, so no second reload is asked for", () => {
+    const fs = require("fs"), os = require("os"), path = require("path");
+    const html = require("../patchers/workbench-html");
+    const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "wb-")), "workbench.html");
+    fs.writeFileSync(f, "<html><head><title>x</title></head><body></body></html>");
+    assert.strictEqual(html.patch(f, { opacity: 0.5 }), true, "first patch writes");
+    assert.strictEqual(html.patch(f, { opacity: 0.5 }), false, "same settings: nothing to do");
+    assert.strictEqual(html.patch(f, { opacity: 0.6 }), true, "a real change writes again");
+  });
+});
