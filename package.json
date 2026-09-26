@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -48,6 +48,14 @@
       {
         "command": "vscode-translucent.disable",
         "title": "Translucent: Disable"
+      },
+      {
+        "command": "vscode-translucent.applyLayers",
+        "title": "Translucent: Apply Layers Now"
+      },
+      {
+        "command": "vscode-translucent.removeLayers",
+        "title": "Translucent: Remove Layers (restore my colours)"
       }
     ],
     "configuration": [
@@ -82,6 +90,142 @@
             "minimum": 0,
             "maximum": 1,
             "description": "Default background opacity of the workbench UI (0 = fully transparent, 1 = opaque)."
+          }
+        }
+      },
+      {
+        "title": "Translucent: Layers",
+        "properties": {
+          "vscode-translucent.layers.enabled": {
+            "type": "boolean",
+            "default": false,
+            "order": 0,
+            "markdownDescription": "Put a tinted, partly see-through surface under the things you read and type in, so text doesn't float over whatever is behind the window. Changes apply immediately; no reload."
+          },
+          "vscode-translucent.layers.preset": {
+            "type": "string",
+            "default": "forestGlass",
+            "order": 1,
+            "enum": [
+              "forestGlass",
+              "frostedDark",
+              "clearGlass",
+              "custom"
+            ],
+            "enumItemLabels": [
+              "Forest Glass",
+              "Frosted Dark",
+              "Clear Glass",
+              "Custom"
+            ],
+            "markdownEnumDescriptions": [
+              "Warm brown layers, forest-green accents, green menu text.",
+              "Neutral dark layers, fairly solid. Leaves your theme's accents alone.",
+              "Light black tint, very see-through.",
+              "Nothing preset: only the layers you set below."
+            ],
+            "markdownDescription": "Starting point for the layers below. Anything you set yourself overrides the preset."
+          },
+          "vscode-translucent.layers.inputs.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 2,
+            "markdownDescription": "**Inputs (text boxes, chat boxes, search fields)**: colour of the layer. Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.inputs.opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "order": 3,
+            "markdownDescription": "**Inputs (text boxes, chat boxes, search fields)**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.menus.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 4,
+            "markdownDescription": "**Menus and dropdowns**: colour of the layer. Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.menus.opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "order": 5,
+            "markdownDescription": "**Menus and dropdowns**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.widgets.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 6,
+            "markdownDescription": "**Editor flyouts (hover, suggestions, find)**: colour of the layer. Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.widgets.opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "order": 7,
+            "markdownDescription": "**Editor flyouts (hover, suggestions, find)**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.quickInput.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 8,
+            "markdownDescription": "**Command palette and quick pick**: colour of the layer. Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.quickInput.opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "order": 9,
+            "markdownDescription": "**Command palette and quick pick**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.notifications.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 10,
+            "markdownDescription": "**Notifications**: colour of the layer. Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.notifications.opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "order": 11,
+            "markdownDescription": "**Notifications**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.tabStrip.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 12,
+            "markdownDescription": "**Editor tab strip**: colour of the layer. Leave unset to use the preset's."
+          },
+          "vscode-translucent.layers.tabStrip.opacity": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "order": 13,
+            "markdownDescription": "**Editor tab strip**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          }
+        }
+      },
+      {
+        "title": "Translucent: Accent & Text",
+        "properties": {
+          "vscode-translucent.accent.color": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 0,
+            "markdownDescription": "One colour for every accent: activity-bar icons, section headers, tab underline, links, cursor, scrollbars, selection, badges. Faint accents keep their faintness. Chat colours are left alone. Leave unset to use the preset's; set it to an empty value to keep your theme's accents."
+          },
+          "vscode-translucent.text.menuColor": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 1,
+            "markdownDescription": "Text colour in menus (right-click and menu bar)."
+          },
+          "vscode-translucent.text.remoteIndicatorColor": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 2,
+            "markdownDescription": "Text colour of the remote indicator in the status bar (for example **WSL: Ubuntu**)."
           }
         }
       },

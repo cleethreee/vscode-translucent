@@ -11,6 +11,7 @@ import * as workbenchHtml from "./patchers/workbench-html";
 import * as mainJs from "./patchers/main-js";
 import * as workbenchJs from "./patchers/workbench-js";
 import { compareVersions } from "./utils/version";
+import { applyLayers, removeLayers } from "./layers/apply";
 
 async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
   const prev = context.globalState.get<string>("version");
@@ -52,9 +53,26 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
   }
 }
 
+// Settings that only change colours (Layers, accent, text) are applied live; no patch, no reload.
+const LIVE_SECTIONS = ["vscode-translucent.layers", "vscode-translucent.accent", "vscode-translucent.text"];
+
 export function activate(context: vscode.ExtensionContext) {
   void checkAutoPatchOnUpdate(context);
+  void applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
   context.subscriptions.push(
+    vscode.commands.registerCommand("vscode-translucent.applyLayers", async () => {
+      const n = await applyLayers(context);
+      vscode.window.showInformationMessage(n ? `Translucent: ${n} colours applied.` : "Translucent: Layers are off; your own colours are back.");
+    }),
+    vscode.commands.registerCommand("vscode-translucent.removeLayers", async () => {
+      await removeLayers(context);
+      vscode.window.showInformationMessage("Translucent: Layers removed; your own colours are back.");
+    }),
+    vscode.workspace.onDidChangeConfiguration(async (e) => {
+      if (LIVE_SECTIONS.some((s) => e.affectsConfiguration(s)) || e.affectsConfiguration("workbench.colorTheme")) {
+        await applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
+      }
+    }),
     vscode.commands.registerCommand(
       "vscode-translucent.enable",
       enableTranslucent,
@@ -65,6 +83,10 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     vscode.workspace.onDidChangeConfiguration(async (e) => {
       if (!e.affectsConfiguration("vscode-translucent")) {
+        return;
+      }
+      // Colour-only settings are handled live above; they don't need the workbench re-patched.
+      if (LIVE_SECTIONS.some((s) => e.affectsConfiguration(s)) && !e.affectsConfiguration("vscode-translucent.effect")) {
         return;
       }
 
