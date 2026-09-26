@@ -84,9 +84,10 @@ export const userBarCss = bar.block;
 
 // A dot before your messages, in the same column and size as the dots Claude puts before its replies; your
 // messages move in to line up with the replies' text. The bubble adds its own 6px padding and sits lower in its row
-// than a reply's text does, hence 23px (not 30) and +26px (not +7), matched by eye on 26 Sept 2026.
+// than a reply's text does, hence 23px (not 30) and +26px (not +7), matched by eye on 26 Sept 2026. The 23px is a margin on the bubble,
+// not padding on the row: padding on the row squeezed multi-line messages to one letter wide.
 const dot = blockFix("user-dot", "claudeUserMessageDot", "the message dot", (c) =>
-  `${USER_ROW}{padding-left:23px !important}`
+  `${USER_ROW} ${USER_MESSAGE}{margin-left:23px !important;max-width:calc(100% - 23px) !important}`
   + `${USER_ROW}:before{content:"";position:absolute;left:9px;top:calc(var(--message-padding-top,8px) + 26px);`
   + `width:7px;height:7px;border-radius:50%;background-color:${c};z-index:1}`);
 export const claudeUserDot = dot.fix;
