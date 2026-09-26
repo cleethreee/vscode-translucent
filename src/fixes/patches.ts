@@ -97,11 +97,12 @@ export const userDotCss = dot.block;
 // which is clear on a see-through window, so the pinned message sat on top of the text scrolling under it. Every
 // message of yours can be pinned, so the backing only appears while one is actually stuck to the top: a
 // scroll-state container query (Chromium 133+), drawn as a tinted, blurred layer behind the message that fades out
-// over its last 12px like Claude's own. Where the query isn't supported, messages simply stay flush.
+// over its last 12px like Claude's own. It reaches 40px above the message to also cover the thin gap between the
+// panel's top edge and the pinned message. Where the query isn't supported, messages simply stay flush.
 const STICKY = '[class*="message_"][class*="stickyHeader_"]';
 const pinned = blockFix("pinned-message", "claudePinnedMessageBackground", "the pinned message backing", (c) =>
   `${STICKY}{container-type:scroll-state}`
-  + `@container scroll-state(stuck:top){${STICKY}::after{content:"";position:absolute;inset:0;z-index:-1;`
+  + `@container scroll-state(stuck:top){${STICKY}::after{content:"";position:absolute;inset:-40px 0 0 0;z-index:-1;`
   + `background:${c};-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);`
   + `-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent);`
   + `mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent)}}`);
