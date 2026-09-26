@@ -46,32 +46,46 @@ export const claudeToolBoxes: ExtensionFix = {
   },
 };
 
-// A thin bar down the left edge of your own messages in the Claude panel, so they stand apart from Claude's
-// replies without a filled bubble. Added as a marked block at the end of the stylesheet.
-const BAR_START = `/* ${MARK}:user-bar */`;
-const BAR_END = `/* /${MARK}:user-bar */`;
+// Markers for your own messages in the Claude panel, so they stand apart from Claude's replies without a filled
+// bubble. Each is a marked block added at the end of the stylesheet, and taken out again when its setting is cleared.
 const USER_MESSAGE = '[class*="userMessage_"]:not([class*="userMessageContainer_"]):not([class*="userMessageAttachments_"])';
+const USER_ROW = '[class*="message_"][class*="userMessageContainer_"]';
 
-export function userBarCss(color: string): string {
-  return `${BAR_START}${USER_MESSAGE}{border-left:2px solid ${color} !important;`
-    + `border-top-left-radius:0 !important;border-bottom-left-radius:0 !important}${BAR_END}`;
+function blockFix(name: string, setting: string, css: (color: string) => string) {
+  const start = `/* ${MARK}:${name} */`;
+  const end = `/* /${MARK}:${name} */`;
+  const block = (color: string) => start + css(color) + end;
+  const without = (text: string) => {
+    const a = text.indexOf(start);
+    const b = text.indexOf(end);
+    return a < 0 || b < a ? text : text.slice(0, a) + text.slice(b + end.length);
+  };
+  const fix: ExtensionFix = {
+    setting,
+    extensionId: "anthropic.claude-code",
+    label: "Claude Code",
+    file: "webview/index.css",
+    isPatched: (text, color) => !!color && text.includes(block(color)),
+    patch: (text, color) => (color && /^#[0-9a-fA-F]{3,8}$/.test(color) ? without(text) + block(color) : undefined),
+    unpatch: without,
+  };
+  return { fix, block };
 }
 
-function withoutBar(text: string): string {
-  const a = text.indexOf(BAR_START);
-  const b = text.indexOf(BAR_END);
-  return a < 0 || b < a ? text : text.slice(0, a) + text.slice(b + BAR_END.length);
-}
+// A thin bar down the left edge of your messages.
+const bar = blockFix("user-bar", "claudeUserMessageBar", (c) =>
+  `${USER_MESSAGE}{border-left:2px solid ${c} !important;border-top-left-radius:0 !important;border-bottom-left-radius:0 !important}`);
+export const claudeUserBar = bar.fix;
+export const userBarCss = bar.block;
 
-export const claudeUserBar: ExtensionFix = {
-  setting: "claudeUserMessageBar",
-  extensionId: "anthropic.claude-code",
-  label: "Claude Code",
-  file: "webview/index.css",
-  isPatched: (text, color) => !!color && text.includes(userBarCss(color)),
-  patch: (text, color) => (color && /^#[0-9a-fA-F]{3,8}$/.test(color) ? withoutBar(text) + userBarCss(color) : undefined),
-  unpatch: withoutBar,
-};
+// A dot before your messages, in the same column, size and height as the dots Claude puts before its replies; your
+// messages move in to line up with the replies' text.
+const dot = blockFix("user-dot", "claudeUserMessageDot", (c) =>
+  `${USER_ROW}{padding-left:30px !important}`
+  + `${USER_ROW}:before{content:"";position:absolute;left:9px;top:calc(var(--message-padding-top,8px) + 11px);`
+  + `width:7px;height:7px;border-radius:50%;background-color:${c};z-index:1}`);
+export const claudeUserDot = dot.fix;
+export const userDotCss = dot.block;
 
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
@@ -104,7 +118,7 @@ export const antigravityGlass: ExtensionFix = {
 
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
-export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, antigravityGlass];
+export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, antigravityGlass];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {
