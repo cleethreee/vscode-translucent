@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -203,6 +203,21 @@
             "maximum": 1,
             "order": 13,
             "markdownDescription": "**Editor tab strip**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+          },
+          "vscode-translucent.settingsPage.color": {
+            "type": "string",
+            "format": "color-hex",
+            "default": "#221716",
+            "order": 20,
+            "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: colour of the page behind them. Needs a window reload (you'll be asked)."
+          },
+          "vscode-translucent.settingsPage.opacity": {
+            "type": "number",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 1,
+            "order": 21,
+            "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: how solid that page is, from `0` (off, fully see-through) to `1` (solid). Try `0.85`."
           }
         }
       },

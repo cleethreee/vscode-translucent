@@ -24,5 +24,7 @@ export function getConfig(): TranslucentConfig {
     activityBarContainerMargin: String(cfg.get<string | number>("activityBarContainerMargin") ?? cfg.get<string | number>("activityBarMargin", "0px 2px 2px 2px")),
     activityBarContainerGap: String(cfg.get<string | number>("activityBarContainerGap") ?? cfg.get<string | number>("activityBarContainerGapBetweenWorkspace") ?? cfg.get<string | number>("activityBarGap", "0px")),
     applyToJupyterNotebook: cfg.get<boolean>("applyToJupyterNotebook", false),
+    settingsPageColor: cfg.get<string>("settingsPage.color", "#221716"),
+    settingsPageOpacity: cfg.get<number>("settingsPage.opacity", 0),
   };
 }

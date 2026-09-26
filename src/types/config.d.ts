@@ -18,4 +18,6 @@ export interface TranslucentConfig {
   activityBarContainerMargin: string;
   activityBarContainerGap: string;
   applyToJupyterNotebook: boolean;
+  settingsPageColor: string;
+  settingsPageOpacity: number;
 }

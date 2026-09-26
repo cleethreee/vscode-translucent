@@ -86,5 +86,12 @@ export function buildCSS(opts: CSSOptions = 0.75): string {
 
   chunks.push(widgetsCss);
 
+  if (normalized.settingsPageBackground) {
+    // Settings, Keyboard Shortcuts and extension detail pages are long reading pages; give them their own layer.
+    chunks.push(`.settings-editor, .settings-editor > .settings-body, .keybindings-editor, .extension-editor {
+  background-color: ${normalized.settingsPageBackground} !important;
+}`);
+  }
+
   return chunks.filter(Boolean).join("\n").trim();
 }

@@ -37,5 +37,6 @@ export interface NormalizedCSSOptions {
   activityBarMarginRight: string;
   activityBarGap: string;
   applyToJupyterNotebook: boolean;
+  settingsPageBackground?: string;
   vscodeVersion?: string;
 }

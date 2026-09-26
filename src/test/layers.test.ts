@@ -1,5 +1,6 @@
 import * as assert from "assert";
 import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS } from "../layers/colors";
+import { buildCSS } from "../styles";
 
 describe("layers: colours", () => {
   it("withAlpha turns a hex colour and 0..1 into #rrggbbaa", () => {
@@ -71,5 +72,14 @@ describe("layers: ownership", () => {
     const second = mergeOwned(first.result, first.owned, { "menu.background": "#291c1a99" });
     assert.strictEqual(second.result["menu.background"], "#291c1a99");
     assert.deepStrictEqual(second.owned, { "menu.background": "#00000000" });
+  });
+});
+
+describe("layers: settings page", () => {
+  it("adds a background for the Settings page only when its opacity is above 0", () => {
+    const off = buildCSS({ settingsPageColor: "#221716", settingsPageOpacity: 0 });
+    const on = buildCSS({ settingsPageColor: "#221716", settingsPageOpacity: 0.85 });
+    assert.ok(!off.includes(".settings-editor, .settings-editor > .settings-body"));
+    assert.ok(on.includes("background-color: #221716d9 !important"));
   });
 });

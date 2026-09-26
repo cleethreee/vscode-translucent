@@ -1,5 +1,6 @@
 import type { CSSOptions, NormalizedCSSOptions } from "../types";
 import { clamp, formatSize, parseBoxValues, calcMargin } from "./format";
+import { withAlpha } from "../layers/colors";
 
 export function normalizeOptions(opts: CSSOptions = 0.4): NormalizedCSSOptions {
   const o = typeof opts === "number" ? { opacity: opts } : opts;
@@ -38,6 +39,10 @@ export function normalizeOptions(opts: CSSOptions = 0.4): NormalizedCSSOptions {
     activityBarMarginRight: calcMargin(right, gapSize),
     activityBarGap: gapSize,
     applyToJupyterNotebook: o.applyToJupyterNotebook ?? false,
+    // A solid-ish page under Settings, Keyboard Shortcuts and extension pages (26 Sept 2026). Opacity 0 = off.
+    settingsPageBackground: (o.settingsPageOpacity ?? 0) > 0
+      ? withAlpha(o.settingsPageColor ?? "#221716", clamp(o.settingsPageOpacity ?? 0))
+      : undefined,
     vscodeVersion: o.vscodeVersion,
   };
 }
