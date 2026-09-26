@@ -223,3 +223,17 @@ export function mergeOwned(
   }
   return { result, owned: nextOwned };
 }
+
+/**
+ * Does a theme-scoped block key ("[Dark+]", "[Vira*]", "[Vira Teal; Vira Clay]") apply to this theme name?
+ * VS Code allows several names separated by ";" and "*" as a wildcard.
+ */
+export function scopeMatches(scopeKey: string, theme: string): boolean {
+  if (!scopeKey.startsWith("[") || !scopeKey.endsWith("]")) {
+    return false;
+  }
+  return scopeKey.slice(1, -1).split(";").map((n) => n.trim()).filter(Boolean).some((name) => {
+    const re = new RegExp("^" + name.split("*").map((part) => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*") + "$", "i");
+    return re.test(theme);
+  });
+}

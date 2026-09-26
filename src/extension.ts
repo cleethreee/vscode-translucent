@@ -71,12 +71,18 @@ export function activate(context: vscode.ExtensionContext) {
       const n = await applyLayers(context);
       vscode.window.showInformationMessage(n ? `Translucent: ${n} colours applied.` : "Translucent: Layers are off; your own colours are back.");
     }),
+    // The OS switching light/dark under "auto detect colour scheme" changes the theme without a settings change.
+    vscode.window.onDidChangeActiveColorTheme(() => {
+      void applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
+    }),
     vscode.commands.registerCommand("vscode-translucent.removeLayers", async () => {
       await removeLayers(context);
       vscode.window.showInformationMessage("Translucent: Layers removed; your own colours are back.");
     }),
     vscode.workspace.onDidChangeConfiguration(async (e) => {
-      if (LIVE_SECTIONS.some((s) => e.affectsConfiguration(s)) || e.affectsConfiguration("workbench.colorTheme")) {
+      if (LIVE_SECTIONS.some((s) => e.affectsConfiguration(s)) || e.affectsConfiguration("workbench.colorTheme")
+          || e.affectsConfiguration("window.autoDetectColorScheme") || e.affectsConfiguration("workbench.preferredDarkColorTheme")
+          || e.affectsConfiguration("workbench.preferredLightColorTheme")) {
         await applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
       }
     }),

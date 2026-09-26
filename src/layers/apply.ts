@@ -7,6 +7,7 @@ import {
   mergeOwned,
   Owned,
   PRESETS,
+  scopeMatches,
 } from "./colors";
 
 const NS = "vscode-translucent";
@@ -85,16 +86,28 @@ export async function applyLayers(context: vscode.ExtensionContext): Promise<num
     }
   }
 
-  const theme = `[${workbench.get<string>("colorTheme", "")}]`;
+  // The theme actually showing. With "auto detect colour scheme" on, VS Code shows the preferred dark or light
+  // theme, not workbench.colorTheme (found 26 Sept 2026: Leaf profile showed Vira Deepforest, settings said Dark+).
+  const theme = activeThemeName();
+  const exact = `[${theme}]`;
   const scopedOwned: Record<string, Owned> = {};
+  const blocks: Record<string, Record<string, unknown>> = {};
   for (const [scope, block] of Object.entries(current)) {
-    if (!scope.startsWith("[") || typeof block !== "object" || block === null) {
-      continue;
+    if (scope.startsWith("[") && typeof block === "object" && block !== null) {
+      blocks[scope] = block as Record<string, unknown>;
     }
-    const b = block as Record<string, unknown>;
-    // Only the active theme gets our keys; any other block we touched before gets its own values back.
+  }
+  if (theme && Object.keys(next).length && !blocks[exact]) {
+    blocks[exact] = {};
+  }
+  for (const [scope, b] of Object.entries(blocks)) {
+    // A theme-scoped block beats the global colours. Our colours go into the active theme's own block in full,
+    // and override any matching wildcard block ("[Vira*]") where it sets the same keys. Blocks for other themes
+    // get back whatever this extension changed in them.
     const inBlock: Record<string, string> = {};
-    if (scope === theme) {
+    if (scope === exact) {
+      Object.assign(inBlock, next);
+    } else if (theme && scopeMatches(scope, theme)) {
       for (const [k, v] of Object.entries(next)) {
         if (k in b || k in (state.scoped[scope] ?? {})) {
           inBlock[k] = v;
@@ -102,7 +115,9 @@ export async function applyLayers(context: vscode.ExtensionContext): Promise<num
       }
     }
     const s = mergeOwned(b, state.scoped[scope] ?? {}, inBlock);
-    result[scope] = s.result;
+    if (Object.keys(s.result).length || scope in current) {
+      result[scope] = s.result;
+    }
     if (Object.keys(s.owned).length) {
       scopedOwned[scope] = s.owned;
     }
@@ -111,6 +126,26 @@ export async function applyLayers(context: vscode.ExtensionContext): Promise<num
   await workbench.update("colorCustomizations", result, vscode.ConfigurationTarget.Global);
   await context.globalState.update(STATE_KEY, { global: g.owned, scoped: scopedOwned });
   return Object.keys(next).length;
+}
+
+/** The colour theme on screen, following "auto detect colour scheme" when it's on. */
+function activeThemeName(): string {
+  const window = vscode.workspace.getConfiguration("window");
+  const workbench = vscode.workspace.getConfiguration("workbench");
+  if (window.get<boolean>("autoDetectColorScheme", false)) {
+    const kind = vscode.window.activeColorTheme.kind;
+    if (kind === vscode.ColorThemeKind.Light) {
+      return workbench.get<string>("preferredLightColorTheme", "") || workbench.get<string>("colorTheme", "");
+    }
+    if (kind === vscode.ColorThemeKind.HighContrast) {
+      return workbench.get<string>("preferredHighContrastColorTheme", "") || workbench.get<string>("colorTheme", "");
+    }
+    if (kind === vscode.ColorThemeKind.HighContrastLight) {
+      return workbench.get<string>("preferredHighContrastLightColorTheme", "") || workbench.get<string>("colorTheme", "");
+    }
+    return workbench.get<string>("preferredDarkColorTheme", "") || workbench.get<string>("colorTheme", "");
+  }
+  return workbench.get<string>("colorTheme", "");
 }
 
 /** Hand every colour back: the command behind "Remove Layers". */

@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS } from "../layers/colors";
+import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS, scopeMatches } from "../layers/colors";
 import { buildCSS } from "../styles";
 
 describe("layers: colours", () => {
@@ -108,5 +108,17 @@ describe("reload prompts", () => {
     assert.strictEqual(html.patch(f, { opacity: 0.5 }), true, "first patch writes");
     assert.strictEqual(html.patch(f, { opacity: 0.5 }), false, "same settings: nothing to do");
     assert.strictEqual(html.patch(f, { opacity: 0.6 }), true, "a real change writes again");
+  });
+});
+
+describe("theme blocks", () => {
+  it("matches exact names, wildcards and ;-separated lists, ignoring case", () => {
+    assert.ok(scopeMatches("[Dark+]", "Dark+"));
+    assert.ok(scopeMatches("[Vira*]", "Vira Deepforest"));
+    assert.ok(scopeMatches("[Monokai; Vira Teal]", "Vira Teal"));
+    assert.ok(scopeMatches("[vira deepforest]", "Vira Deepforest"));
+    assert.ok(!scopeMatches("[Vira*]", "Dark+"));
+    assert.ok(!scopeMatches("[Dark+]", "Dark Modern"), "+ is literal, not a pattern");
+    assert.ok(!scopeMatches("editor.background", "Dark+"));
   });
 });
