@@ -53,6 +53,10 @@ export function readColorSettings(): ColorSettings | undefined {
   if (menuText !== undefined) {
     base.menuText = menuText || undefined;
   }
+  const remoteBg = explicit<string>(cfg, "text.remoteIndicatorBackground");
+  if (remoteBg !== undefined) {
+    base.statusBarRemoteTint = remoteBg ? { color: remoteBg, opacity: 1 } : undefined;
+  }
   const remoteText = explicit<string>(cfg, "text.remoteIndicatorColor");
   if (remoteText !== undefined) {
     base.statusBarRemoteText = remoteText || undefined;
