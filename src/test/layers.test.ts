@@ -49,6 +49,7 @@ describe("layers: colours", () => {
     const m = buildColorMap({ layers: {}, accent: "#3d8a52", activeIcon: "#FDE047" });
     assert.strictEqual(m["activityBar.foreground"], "#fde047");
     assert.strictEqual(m["activityBarTop.foreground"], "#fde047");
+    assert.strictEqual(m["modernActivityBarItem.activeForeground"], "#fde047", "the modern-UI activity bar has its own key");
     assert.strictEqual(m["activityBar.inactiveForeground"], "#3d8a52");
   });
 

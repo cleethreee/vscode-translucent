@@ -171,6 +171,9 @@ export function buildColorMap(s: ColorSettings): Record<string, string> {
   if (activeIcon) {
     out["activityBar.foreground"] = activeIcon;
     out["activityBarTop.foreground"] = activeIcon;
+    // VS Code's "modern UI" activity bar colours the selected icon with its own key (found 26 Sept 2026: the
+    // yellow was set but the icon stayed white until this one was set too).
+    out["modernActivityBarItem.activeForeground"] = activeIcon;
   }
   const menuText = solid(s.menuText);
   if (menuText) {
