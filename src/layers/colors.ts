@@ -101,21 +101,46 @@ export const PRESETS: Record<string, ColorSettings> = {
   },
 };
 
-const HEX6 = /^#?([0-9a-fA-F]{6})$/;
-
-/** "#rrggbb" + 0..1 -> "#rrggbbaa". Anything malformed returns undefined, so a typo is skipped, not written. */
-export function withAlpha(color: string | undefined, opacity: number): string | undefined {
-  const m = HEX6.exec((color ?? "").trim());
-  if (!m || !Number.isFinite(opacity)) {
+/**
+ * "#rgb", "#rgba", "#rrggbb" or "#rrggbbaa" -> [rrggbb, alpha 0..1]. The Settings colour picker hands back the
+ * 8-digit form when you drag its transparency slider, so all four are accepted.
+ */
+export function parseHex(color: string | undefined): [string, number] | undefined {
+  const m = /^#?([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.exec((color ?? "").trim());
+  if (!m) {
     return undefined;
   }
-  const a = Math.round(Math.min(1, Math.max(0, opacity)) * 255);
-  return `#${m[1].toLowerCase()}${a.toString(16).padStart(2, "0")}`;
+  let h = m[1].toLowerCase();
+  if (h.length <= 4) {
+    h = h.split("").map((c) => c + c).join("");
+  }
+  const alpha = h.length === 8 ? parseInt(h.slice(6), 16) / 255 : 1;
+  return [h.slice(0, 6), alpha];
 }
 
+/**
+ * Colour + 0..1 -> "#rrggbbaa". A colour that carries its own transparency is multiplied by the opacity, so
+ * "#00000080" at 0.5 is a quarter solid. Anything malformed returns undefined, so a typo is skipped, not written.
+ */
+export function withAlpha(color: string | undefined, opacity: number): string | undefined {
+  const parsed = parseHex(color);
+  if (!parsed || !Number.isFinite(opacity)) {
+    return undefined;
+  }
+  const a = Math.round(Math.min(1, Math.max(0, opacity)) * parsed[1] * 255);
+  return `#${parsed[0]}${a.toString(16).padStart(2, "0")}`;
+}
+
+/** A text or accent colour: its own transparency is kept, unless the key is always drawn at a set faintness. */
 function solid(color: string | undefined, alphaHex = ""): string | undefined {
-  const m = HEX6.exec((color ?? "").trim());
-  return m ? `#${m[1].toLowerCase()}${alphaHex}` : undefined;
+  const parsed = parseHex(color);
+  if (!parsed) {
+    return undefined;
+  }
+  if (alphaHex) {
+    return `#${parsed[0]}${alphaHex}`;
+  }
+  return parsed[1] < 1 ? withAlpha(color, 1) : `#${parsed[0]}`;
 }
 
 /** Settings -> the colour customizations to write. */

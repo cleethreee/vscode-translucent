@@ -10,8 +10,16 @@ describe("layers: colours", () => {
     assert.strictEqual(withAlpha("#ffffff", 1.7), "#ffffffff", "clamps above 1");
   });
 
+  it("accepts the colour picker's 8-digit colours and shorthand, multiplying their transparency", () => {
+    assert.strictEqual(withAlpha("#00000080", 0.5), "#00000040");
+    assert.strictEqual(withAlpha("#00000000", 0.6), "#00000000", "a fully clear colour stays clear");
+    assert.strictEqual(withAlpha("#1e1e1e66", 1), "#1e1e1e66");
+    assert.strictEqual(withAlpha("#abc", 1), "#aabbccff");
+  });
+
   it("withAlpha skips anything malformed instead of writing it", () => {
     assert.strictEqual(withAlpha("#12345", 0.5), undefined);
+    assert.strictEqual(withAlpha("#1234567", 0.5), undefined);
     assert.strictEqual(withAlpha("green", 0.5), undefined);
     assert.strictEqual(withAlpha(undefined, 0.5), undefined);
     assert.strictEqual(withAlpha("#123456", Number.NaN), undefined);
