@@ -165,10 +165,11 @@ async function syncAll(context: vscode.ExtensionContext): Promise<void> {
   for (const fix of FIXES) {
     try {
       const r = await syncFix(context, fix);
-      if (r === "applied" && !applied.includes(fix.label)) {
-        applied.push(fix.label);
-      } else if (r === "removed" && !removed.includes(fix.label)) {
-        removed.push(fix.label);
+      const item = `${fix.what} ${r === "removed" ? "from" : "to"} ${fix.label}`;
+      if (r === "applied") {
+        applied.push(item);
+      } else if (r === "removed") {
+        removed.push(item);
       } else if (r === "failed") {
         failed.push(fix.label);
       }
@@ -187,9 +188,11 @@ async function syncAll(context: vscode.ExtensionContext): Promise<void> {
   if (!applied.length && !removed.length) {
     return;
   }
+  // e.g. "Translucent added the message dot to Claude Code and removed the message bar from Claude Code."
+  const list = (xs: string[]) => xs.length > 1 ? `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}` : xs[0];
   const parts = [
-    applied.length ? `applied the fix for ${applied.join(" and ")}` : "",
-    removed.length ? `put ${removed.join(" and ")} back as it was` : "",
+    applied.length ? `added ${list(applied)}` : "",
+    removed.length ? `removed ${list(removed)}` : "",
   ].filter(Boolean);
   const choice = await vscode.window.showInformationMessage(
     `Translucent ${parts.join(" and ")}. Reload the window to see it.`,

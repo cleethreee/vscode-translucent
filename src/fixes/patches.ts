@@ -13,8 +13,10 @@ export interface ExtensionFix {
   setting: string;
   /** The extension it applies to. */
   extensionId: string;
-  /** Short name used in messages. */
+  /** The extension's name, used in messages. */
   label: string;
+  /** What the fix does, for messages ("the IN/OUT fix", "the message dot"). */
+  what: string;
   /** The file to patch, relative to the extension's folder. */
   file: string;
   /** True when the text already has this fix (for a fix with a value, the setting's value, e.g. a colour). */
@@ -36,6 +38,7 @@ export const claudeToolBoxes: ExtensionFix = {
   setting: "claudeToolBoxes",
   extensionId: "anthropic.claude-code",
   label: "Claude Code",
+  what: "the IN/OUT box fix",
   file: "webview/index.css",
   isPatched: (text) => !CLAUDE_MASK.test(text) && text.includes("mask-image:linear-gradient(to bottom,#000"),
   patch(text) {
@@ -51,7 +54,7 @@ export const claudeToolBoxes: ExtensionFix = {
 const USER_MESSAGE = '[class*="userMessage_"]:not([class*="userMessageContainer_"]):not([class*="userMessageAttachments_"])';
 const USER_ROW = '[class*="message_"][class*="userMessageContainer_"]';
 
-function blockFix(name: string, setting: string, css: (color: string) => string) {
+function blockFix(name: string, setting: string, what: string, css: (color: string) => string) {
   const start = `/* ${MARK}:${name} */`;
   const end = `/* /${MARK}:${name} */`;
   const block = (color: string) => start + css(color) + end;
@@ -64,6 +67,7 @@ function blockFix(name: string, setting: string, css: (color: string) => string)
     setting,
     extensionId: "anthropic.claude-code",
     label: "Claude Code",
+    what,
     file: "webview/index.css",
     isPatched: (text, color) => !!color && text.includes(block(color)),
     patch: (text, color) => (color && /^#[0-9a-fA-F]{3,8}$/.test(color) ? without(text) + block(color) : undefined),
@@ -73,14 +77,14 @@ function blockFix(name: string, setting: string, css: (color: string) => string)
 }
 
 // A thin bar down the left edge of your messages.
-const bar = blockFix("user-bar", "claudeUserMessageBar", (c) =>
+const bar = blockFix("user-bar", "claudeUserMessageBar", "the message bar", (c) =>
   `${USER_MESSAGE}{border-left:2px solid ${c} !important;border-top-left-radius:0 !important;border-bottom-left-radius:0 !important}`);
 export const claudeUserBar = bar.fix;
 export const userBarCss = bar.block;
 
 // A dot before your messages, in the same column, size and height as the dots Claude puts before its replies; your
 // messages move in to line up with the replies' text.
-const dot = blockFix("user-dot", "claudeUserMessageDot", (c) =>
+const dot = blockFix("user-dot", "claudeUserMessageDot", "the message dot", (c) =>
   `${USER_ROW}{padding-left:30px !important}`
   + `${USER_ROW}:before{content:"";position:absolute;left:9px;top:calc(var(--message-padding-top,8px) + 11px);`
   + `width:7px;height:7px;border-radius:50%;background-color:${c};z-index:1}`);
@@ -100,6 +104,7 @@ export const antigravityGlass: ExtensionFix = {
   setting: "antigravityGlass",
   extensionId: "google.google-antigravity",
   label: "Antigravity",
+  what: "the glass fix",
   file: "extension.js",
   isPatched: (text) => text.includes(`/* ${MARK} */`),
   patch(text) {
