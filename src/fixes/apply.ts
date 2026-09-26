@@ -46,14 +46,58 @@ async function writeAntigravityFiles(context: vscode.ExtensionContext, dir: vsco
   }
 }
 
-/** Apply or take back one fix. Returns what happened, for the reload message. */
-async function syncFix(context: vscode.ExtensionContext, fix: ExtensionFix): Promise<"applied" | "removed" | "failed" | undefined> {
-  const ext = vscode.extensions.getExtension(fix.extensionId);
-  if (!ext) {
-    return undefined;
+/**
+ * Every installed copy of an extension. Translucent runs on the Windows (UI) side, and extensions running on the
+ * remote side (WSL, SSH) aren't visible through vscode.extensions there, so in a remote window their folders are
+ * found directly: <home>/.vscode-server/extensions/<id>-<version> on the remote, read through the remote file system.
+ * Every version found is fixed (an update leaves the old folder behind until VS Code cleans it up).
+ */
+async function findInstalls(extensionId: string): Promise<vscode.Uri[]> {
+  const found = new Map<string, vscode.Uri>();
+  const local = vscode.extensions.getExtension(extensionId);
+  if (local) {
+    found.set(local.extensionUri.toString(), local.extensionUri);
   }
-  const enabled = vscode.workspace.getConfiguration(NS).get<boolean>(`extensionFixes.${fix.setting}`, false);
-  const file = vscode.Uri.joinPath(ext.extensionUri, fix.file);
+  const prefix = extensionId.toLowerCase() + "-";
+  const authorities = new Set((vscode.workspace.workspaceFolders ?? [])
+    .filter((f) => f.uri.scheme === "vscode-remote").map((f) => f.uri.authority));
+  for (const authority of authorities) {
+    const at = (path: string) => vscode.Uri.from({ scheme: "vscode-remote", authority, path });
+    const list = async (uri: vscode.Uri) => {
+      try {
+        return await vscode.workspace.fs.readDirectory(uri);
+      } catch {
+        return [];
+      }
+    };
+    const homes = ["/root", ...(await list(at("/home"))).filter(([, t]) => t & vscode.FileType.Directory).map(([n]) => `/home/${n}`)];
+    for (const home of homes) {
+      const dir = `${home}/.vscode-server/extensions`;
+      for (const [name, type] of await list(at(dir))) {
+        if (type & vscode.FileType.Directory && name.toLowerCase().startsWith(prefix)) {
+          const uri = at(`${dir}/${name}`);
+          found.set(uri.toString(), uri);
+        }
+      }
+    }
+  }
+  return [...found.values()];
+}
+
+type Outcome = "applied" | "removed" | "failed" | undefined;
+
+/** Apply or take back one fix in every installed copy. Returns what happened, for the reload message. */
+async function syncFix(context: vscode.ExtensionContext, fix: ExtensionFix): Promise<Outcome> {
+  const results = await Promise.all((await findInstalls(fix.extensionId)).map((dir) => syncFixAt(context, fix, dir)));
+  return (["failed", "applied", "removed"] as Outcome[]).find((r) => results.includes(r));
+}
+
+async function syncFixAt(context: vscode.ExtensionContext, fix: ExtensionFix, dir: vscode.Uri): Promise<Outcome> {
+  // A switch (true/false) or a value such as a colour (empty = off).
+  const setting = vscode.workspace.getConfiguration(NS).get<unknown>(`extensionFixes.${fix.setting}`);
+  const value = typeof setting === "string" ? setting.trim() : undefined;
+  const enabled = typeof setting === "string" ? value !== "" : setting === true;
+  const file = vscode.Uri.joinPath(dir, fix.file);
   const backup = file.with({ path: file.path + BACKUP });
   const text = await read(file);
   if (text === undefined) {
@@ -62,23 +106,32 @@ async function syncFix(context: vscode.ExtensionContext, fix: ExtensionFix): Pro
 
   if (enabled) {
     if (fix === antigravityGlass) {
-      await writeAntigravityFiles(context, ext.extensionUri);
+      await writeAntigravityFiles(context, dir);
     }
-    if (fix.isPatched(text)) {
+    if (fix.isPatched(text, value)) {
       return undefined;
     }
-    const patched = fix.patch(text);
+    const patched = fix.patch(text, value);
     if (patched === undefined) {
       return "failed";
     }
-    if ((await read(backup)) === undefined) {
+    if (!fix.unpatch && (await read(backup)) === undefined) {
       await write(backup, text);
     }
     await write(file, patched);
     return "applied";
   }
 
-  // Off: put back our own backup, if this copy of the extension has one.
+  // Off. A block-only fix just takes its block out.
+  if (fix.unpatch) {
+    const cleaned = fix.unpatch(text);
+    if (cleaned === text) {
+      return undefined;
+    }
+    await write(file, cleaned);
+    return "removed";
+  }
+  // Otherwise put back our own backup, if this copy of the extension has one.
   const original = await read(backup);
   if (original === undefined) {
     return undefined;
@@ -88,8 +141,8 @@ async function syncFix(context: vscode.ExtensionContext, fix: ExtensionFix): Pro
   }
   await remove(backup);
   if (fix === antigravityGlass) {
-    await remove(vscode.Uri.joinPath(ext.extensionUri, ANTIGRAVITY_PROXY_FILE));
-    await remove(vscode.Uri.joinPath(ext.extensionUri, ANTIGRAVITY_CSS_FILE));
+    await remove(vscode.Uri.joinPath(dir, ANTIGRAVITY_PROXY_FILE));
+    await remove(vscode.Uri.joinPath(dir, ANTIGRAVITY_CSS_FILE));
   }
   return "removed";
 }
@@ -105,9 +158,9 @@ export async function syncExtensionFixes(context: vscode.ExtensionContext): Prom
   for (const fix of FIXES) {
     try {
       const r = await syncFix(context, fix);
-      if (r === "applied") {
+      if (r === "applied" && !applied.includes(fix.label)) {
         applied.push(fix.label);
-      } else if (r === "removed") {
+      } else if (r === "removed" && !removed.includes(fix.label)) {
         removed.push(fix.label);
       } else if (r === "failed") {
         failed.push(fix.label);

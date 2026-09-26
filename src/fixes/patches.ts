@@ -17,10 +17,15 @@ export interface ExtensionFix {
   label: string;
   /** The file to patch, relative to the extension's folder. */
   file: string;
-  /** True when the text already has this fix. */
-  isPatched(text: string): boolean;
+  /** True when the text already has this fix (for a fix with a value, the setting's value, e.g. a colour). */
+  isPatched(text: string, value?: string): boolean;
   /** The patched text, or undefined when the file doesn't match what the fix expects. */
-  patch(text: string): string | undefined;
+  patch(text: string, value?: string): string | undefined;
+  /**
+   * For fixes that only add a marked block: the text with that block taken out. These keep no backup, so they can
+   * share a file with a backup-based fix without one undoing the other.
+   */
+  unpatch?(text: string): string;
 }
 
 // Claude Code fades long tool output with a mask built from the panel background. With a fully transparent
@@ -39,6 +44,33 @@ export const claudeToolBoxes: ExtensionFix = {
     }
     return text.replace(new RegExp(CLAUDE_MASK.source, "g"), "mask-image:linear-gradient(to bottom,#000 $1");
   },
+};
+
+// A thin bar down the left edge of your own messages in the Claude panel, so they stand apart from Claude's
+// replies without a filled bubble. Added as a marked block at the end of the stylesheet.
+const BAR_START = `/* ${MARK}:user-bar */`;
+const BAR_END = `/* /${MARK}:user-bar */`;
+const USER_MESSAGE = '[class*="userMessage_"]:not([class*="userMessageContainer_"]):not([class*="userMessageAttachments_"])';
+
+export function userBarCss(color: string): string {
+  return `${BAR_START}${USER_MESSAGE}{border-left:2px solid ${color} !important;`
+    + `border-top-left-radius:0 !important;border-bottom-left-radius:0 !important}${BAR_END}`;
+}
+
+function withoutBar(text: string): string {
+  const a = text.indexOf(BAR_START);
+  const b = text.indexOf(BAR_END);
+  return a < 0 || b < a ? text : text.slice(0, a) + text.slice(b + BAR_END.length);
+}
+
+export const claudeUserBar: ExtensionFix = {
+  setting: "claudeUserMessageBar",
+  extensionId: "anthropic.claude-code",
+  label: "Claude Code",
+  file: "webview/index.css",
+  isPatched: (text, color) => !!color && text.includes(userBarCss(color)),
+  patch: (text, color) => (color && /^#[0-9a-fA-F]{3,8}$/.test(color) ? withoutBar(text) + userBarCss(color) : undefined),
+  unpatch: withoutBar,
 };
 
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
@@ -70,7 +102,9 @@ export const antigravityGlass: ExtensionFix = {
   },
 };
 
-export const FIXES: ExtensionFix[] = [claudeToolBoxes, antigravityGlass];
+// The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
+// then added back in the same pass.
+export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, antigravityGlass];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {

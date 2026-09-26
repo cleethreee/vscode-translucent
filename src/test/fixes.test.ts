@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { antigravityCss, antigravityGlass, claudeToolBoxes, MARK } from "../fixes/patches";
+import { antigravityCss, antigravityGlass, claudeToolBoxes, claudeUserBar, MARK } from "../fixes/patches";
 import { buildColorMap, PRESETS } from "../layers/colors";
 
 describe("other extensions: Claude Code", () => {
@@ -62,5 +62,22 @@ describe("layers: soft borders", () => {
 
   it("is off unless asked for", () => {
     assert.strictEqual(buildColorMap({ layers: {} })["editorOverviewRuler.border"], undefined);
+  });
+});
+
+describe("other extensions: Claude user-message bar", () => {
+  const css = ".userMessage_07S1Yg{border:1px solid var(--app-input-border)}";
+
+  it("adds one bar block, swaps its colour, and takes it out again", () => {
+    const green = claudeUserBar.patch(css, "#3d8a52")!;
+    assert.ok(green.includes("border-left:2px solid #3d8a52") && claudeUserBar.isPatched(green, "#3d8a52"));
+    assert.ok(!claudeUserBar.isPatched(green, "#fde047"), "a new colour counts as not applied yet");
+    const yellow = claudeUserBar.patch(green, "#fde047")!;
+    assert.ok(yellow.includes("#fde047") && !yellow.includes("#3d8a52"), "only one block, with the new colour");
+    assert.strictEqual(claudeUserBar.unpatch!(yellow), css);
+  });
+
+  it("skips anything that isn't a hex colour", () => {
+    assert.strictEqual(claudeUserBar.patch(css, "green; } body { display:none"), undefined);
   });
 });

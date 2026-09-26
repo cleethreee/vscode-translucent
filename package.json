@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -408,6 +408,13 @@
             "default": false,
             "order": 1,
             "markdownDescription": "**Antigravity:** make the chat panel see-through instead of black, and give its input box and message bubbles the **Inputs** layer colour. The panel then loads its chat page through a small local proxy that adds the colours.\n\nThis edits Antigravity's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change, so it survives Antigravity updates."
+          },
+          "vscode-translucent.extensionFixes.claudeUserMessageBar": {
+            "type": "string",
+            "default": "",
+            "format": "color",
+            "order": 0.5,
+            "markdownDescription": "**Claude Code:** a thin bar in this colour down the left edge of your own messages, so they stand apart from Claude's replies without a filled bubble. Leave empty for none.\n\nThis edits Claude Code's own stylesheet (a marked block that is taken out again when you clear this). It is checked again whenever extensions change, so it survives Claude Code updates."
           }
         }
       },
