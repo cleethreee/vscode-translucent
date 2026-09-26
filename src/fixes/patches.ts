@@ -93,6 +93,14 @@ const dot = blockFix("user-dot", "claudeUserMessageDot", "the message dot", (c) 
 export const claudeUserDot = dot.fix;
 export const userDotCss = dot.block;
 
+// When you scroll, Claude pins your latest message to the top of the panel. Its backing is the panel background,
+// which is clear on a see-through window, so the pinned message sat on top of the text scrolling under it.
+// This gives it a tinted, blurred backing instead.
+const pinned = blockFix("pinned-message", "claudePinnedMessageBackground", "the pinned message backing", (c) =>
+  `[class*="message_"][class*="stickyHeader_"]{--sticky-bg:${c} !important;`
+  + `-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}`);
+export const claudePinnedMessage = pinned.fix;
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -125,7 +133,7 @@ export const antigravityGlass: ExtensionFix = {
 
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
-export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, antigravityGlass];
+export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {

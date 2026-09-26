@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -422,6 +422,13 @@
             "format": "color",
             "order": 0.6,
             "markdownDescription": "**Claude Code:** a dot in this colour before each of your own messages, in the same column as the dots before Claude's replies (your messages move in to line up with them). Leave empty for none.\n\nLike the bar, this is a marked block in Claude Code's stylesheet, re-applied after updates and taken out when cleared."
+          },
+          "vscode-translucent.extensionFixes.claudePinnedMessageBackground": {
+            "type": "string",
+            "default": "",
+            "format": "color",
+            "order": 0.7,
+            "markdownDescription": "**Claude Code:** a backing colour for your message when Claude pins it to the top of the panel while you scroll. On a see-through window the pinned message otherwise sits on top of the text scrolling under it. A partly see-through colour (e.g. `#221716e6`) keeps the glass look; the area behind it is also blurred. Leave empty for none.\n\nA marked block in Claude Code's stylesheet, re-applied after updates and taken out when cleared."
           }
         }
       },
