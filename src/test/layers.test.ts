@@ -53,6 +53,12 @@ describe("layers: colours", () => {
     assert.strictEqual(m["activityBar.inactiveForeground"], "#3d8a52");
   });
 
+  it("the remote indicator can be clear at rest and coloured on hover", () => {
+    const m = buildColorMap({ layers: {}, statusBarRemoteTint: { color: "#00000000", opacity: 1 }, statusBarRemoteHover: "#F48771" });
+    assert.strictEqual(m["statusBarItem.remoteBackground"], "#00000000");
+    assert.strictEqual(m["statusBarItem.remoteHoverBackground"], "#f48771");
+  });
+
   it("a layer sets every key it owns", () => {
     const m = buildColorMap({ layers: { menus: { color: "#101010", opacity: 0.5 } } });
     for (const k of LAYER_KEYS.menus) {

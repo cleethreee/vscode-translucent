@@ -62,6 +62,7 @@ export interface ColorSettings {
   activeIcon?: string;      // the selected icon in the activity bar (side or top); overrides the accent there
   statusBarRemoteText?: string;
   statusBarRemoteTint?: Layer;
+  statusBarRemoteHover?: string;  // background of the remote indicator on hover
 }
 
 /** The presets. "forestGlass" is the look set up by hand on 25-26 September 2026. */
@@ -188,6 +189,10 @@ export function buildColorMap(s: ColorSettings): Record<string, string> {
     if (tint) {
       out["statusBarItem.remoteBackground"] = tint;
     }
+  }
+  const remoteHover = solid(s.statusBarRemoteHover);
+  if (remoteHover) {
+    out["statusBarItem.remoteHoverBackground"] = remoteHover;
   }
   return out;
 }

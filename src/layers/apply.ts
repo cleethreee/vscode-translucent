@@ -57,6 +57,10 @@ export function readColorSettings(): ColorSettings | undefined {
   if (remoteBg !== undefined) {
     base.statusBarRemoteTint = remoteBg ? { color: remoteBg, opacity: 1 } : undefined;
   }
+  const remoteHover = explicit<string>(cfg, "text.remoteIndicatorHoverBackground");
+  if (remoteHover !== undefined) {
+    base.statusBarRemoteHover = remoteHover || undefined;
+  }
   const remoteText = explicit<string>(cfg, "text.remoteIndicatorColor");
   if (remoteText !== undefined) {
     base.statusBarRemoteText = remoteText || undefined;
