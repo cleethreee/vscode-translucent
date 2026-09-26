@@ -135,7 +135,11 @@ export async function applyLayers(context: vscode.ExtensionContext): Promise<num
     }
   }
 
-  await workbench.update("colorCustomizations", result, vscode.ConfigurationTarget.Global);
+  // Only write when something changed. Every write goes through settings.json, and another extension writing at the
+  // same moment (the Vira theme does at startup) makes VS Code fail one of them with "the file has unsaved changes".
+  if (JSON.stringify(result) !== JSON.stringify(current)) {
+    await workbench.update("colorCustomizations", result, vscode.ConfigurationTarget.Global);
+  }
   await context.globalState.update(STATE_KEY, { global: g.owned, scoped: scopedOwned });
   return Object.keys(next).length;
 }
