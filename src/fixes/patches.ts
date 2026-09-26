@@ -94,11 +94,17 @@ export const claudeUserDot = dot.fix;
 export const userDotCss = dot.block;
 
 // When you scroll, Claude pins your latest message to the top of the panel. Its backing is the panel background,
-// which is clear on a see-through window, so the pinned message sat on top of the text scrolling under it.
-// This gives it a tinted, blurred backing instead.
+// which is clear on a see-through window, so the pinned message sat on top of the text scrolling under it. Every
+// message of yours can be pinned, so the backing only appears while one is actually stuck to the top: a
+// scroll-state container query (Chromium 133+), drawn as a tinted, blurred layer behind the message that fades out
+// over its last 12px like Claude's own. Where the query isn't supported, messages simply stay flush.
+const STICKY = '[class*="message_"][class*="stickyHeader_"]';
 const pinned = blockFix("pinned-message", "claudePinnedMessageBackground", "the pinned message backing", (c) =>
-  `[class*="message_"][class*="stickyHeader_"]{--sticky-bg:${c} !important;`
-  + `-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}`);
+  `${STICKY}{container-type:scroll-state}`
+  + `@container scroll-state(stuck:top){${STICKY}::after{content:"";position:absolute;inset:0;z-index:-1;`
+  + `background:${c};-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);`
+  + `-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent);`
+  + `mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent)}}`);
 export const claudePinnedMessage = pinned.fix;
 
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
