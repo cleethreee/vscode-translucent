@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -56,6 +56,10 @@
       {
         "command": "vscode-translucent.removeLayers",
         "title": "Translucent: Remove Layers (restore my colours)"
+      },
+      {
+        "command": "vscode-translucent.reapplyExtensionFixes",
+        "title": "Translucent: Re-apply Other Extensions' Fixes"
       }
     ],
     "configuration": [
@@ -218,6 +222,12 @@
             "maximum": 1,
             "order": 21,
             "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: how solid that page is, from `0` (off, fully see-through) to `1` (solid). Try `0.85`."
+          },
+          "vscode-translucent.layers.softBorders": {
+            "type": "boolean",
+            "default": true,
+            "order": 2,
+            "markdownDescription": "Swap the theme's dark lines and shadows for clear or faint ones: the border beside the scrollbar, the terminal panel's top edge, and scroll and widget shadows. On a see-through window these show up as black streaks. Changes apply immediately."
           }
         }
       },
@@ -381,6 +391,23 @@
             "type": "string",
             "default": "8px",
             "description": "Border radius (rounding) of the side activity bar container (e.g. '0px', '8px', '12px')."
+          }
+        }
+      },
+      {
+        "title": "Translucent: Other Extensions",
+        "properties": {
+          "vscode-translucent.extensionFixes.claudeToolBoxes": {
+            "type": "boolean",
+            "default": false,
+            "order": 0,
+            "markdownDescription": "**Claude Code:** show the text in the IN/OUT tool boxes. Its panel fades long output with a mask made from the panel background, which hides everything when that background is see-through.\n\nThis edits Claude Code's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change, so it survives Claude Code updates."
+          },
+          "vscode-translucent.extensionFixes.antigravityGlass": {
+            "type": "boolean",
+            "default": false,
+            "order": 1,
+            "markdownDescription": "**Antigravity:** make the chat panel see-through instead of black, and give its input box and message bubbles the **Inputs** layer colour. The panel then loads its chat page through a small local proxy that adds the colours.\n\nThis edits Antigravity's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change, so it survives Antigravity updates."
           }
         }
       },

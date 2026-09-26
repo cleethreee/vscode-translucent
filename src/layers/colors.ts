@@ -50,6 +50,17 @@ export const ACCENT_KEYS: Record<string, string> = {
   "notebook.inactiveFocusedCellBorder": "80",
 };
 
+/**
+ * Lines and shadows that the theme draws dark, which show up as black streaks on a see-through window: the border
+ * next to the scrollbar (overview ruler), the terminal panel's top edge, and scroll and widget shadows.
+ */
+export const SOFT_BORDER_KEYS: Record<string, string> = {
+  "editorOverviewRuler.border": "#00000000",
+  "panel.border": "#ffffff0f",
+  "scrollbar.shadow": "#00000000",
+  "widget.shadow": "#00000000",
+};
+
 export interface Layer {
   color: string;   // "#rrggbb"
   opacity: number; // 0..1
@@ -63,6 +74,7 @@ export interface ColorSettings {
   statusBarRemoteText?: string;
   statusBarRemoteTint?: Layer;
   statusBarRemoteHover?: string;  // background of the remote indicator on hover
+  softBorders?: boolean;          // clear or faint versions of the theme's dark lines (SOFT_BORDER_KEYS)
 }
 
 /** The presets. "forestGlass" is the look set up by hand on 25-26 September 2026. */
@@ -80,6 +92,7 @@ export const PRESETS: Record<string, ColorSettings> = {
     menuText: "#3d8a52",
     statusBarRemoteText: "#446058",
     statusBarRemoteTint: { color: "#f97316", opacity: 0.05 },
+    softBorders: true,
   },
   frostedDark: {
     layers: {
@@ -189,6 +202,9 @@ export function buildColorMap(s: ColorSettings): Record<string, string> {
     if (tint) {
       out["statusBarItem.remoteBackground"] = tint;
     }
+  }
+  if (s.softBorders) {
+    Object.assign(out, SOFT_BORDER_KEYS);
   }
   const remoteHover = solid(s.statusBarRemoteHover);
   if (remoteHover) {

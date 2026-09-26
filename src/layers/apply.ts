@@ -61,6 +61,10 @@ export function readColorSettings(): ColorSettings | undefined {
   if (remoteHover !== undefined) {
     base.statusBarRemoteHover = remoteHover || undefined;
   }
+  const softBorders = explicit<boolean>(cfg, "layers.softBorders");
+  if (softBorders !== undefined) {
+    base.softBorders = softBorders;
+  }
   const remoteText = explicit<string>(cfg, "text.remoteIndicatorColor");
   if (remoteText !== undefined) {
     base.statusBarRemoteText = remoteText || undefined;

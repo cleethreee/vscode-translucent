@@ -12,6 +12,7 @@ import * as mainJs from "./patchers/main-js";
 import * as workbenchJs from "./patchers/workbench-js";
 import { compareVersions } from "./utils/version";
 import { applyLayers, removeLayers } from "./layers/apply";
+import { syncExtensionFixes } from "./fixes/apply";
 
 async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
   const prev = context.globalState.get<string>("version");
@@ -61,12 +62,27 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
 }
 
 // Settings that only change colours (Layers, accent, text) are applied live; no patch, no reload.
-const LIVE_SECTIONS = ["vscode-translucent.layers", "vscode-translucent.accent", "vscode-translucent.text"];
+// Other Extensions fixes are handled on their own too.
+const LIVE_SECTIONS = ["vscode-translucent.layers", "vscode-translucent.accent", "vscode-translucent.text",
+  "vscode-translucent.extensionFixes"];
+
+function syncFixes(context: vscode.ExtensionContext) {
+  void syncExtensionFixes(context).catch((err: unknown) => handleError("extension fixes", err));
+}
 
 export function activate(context: vscode.ExtensionContext) {
   void checkAutoPatchOnUpdate(context);
   void applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
+  syncFixes(context);
   context.subscriptions.push(
+    // An extension update replaces its files and drops the fix; put it back.
+    vscode.extensions.onDidChange(() => syncFixes(context)),
+    vscode.commands.registerCommand("vscode-translucent.reapplyExtensionFixes", () => syncFixes(context)),
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration("vscode-translucent.extensionFixes") || e.affectsConfiguration("vscode-translucent.layers")) {
+        syncFixes(context);
+      }
+    }),
     vscode.commands.registerCommand("vscode-translucent.applyLayers", async () => {
       const n = await applyLayers(context);
       vscode.window.showInformationMessage(n ? `Translucent: ${n} colours applied.` : "Translucent: Layers are off; your own colours are back.");
