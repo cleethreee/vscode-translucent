@@ -44,6 +44,10 @@ export function readColorSettings(): ColorSettings | undefined {
   if (accent !== undefined) {
     base.accent = accent || undefined;
   }
+  const activeIcon = explicit<string>(cfg, "text.activeIconColor");
+  if (activeIcon !== undefined) {
+    base.activeIcon = activeIcon || undefined;
+  }
   const menuText = explicit<string>(cfg, "text.menuColor");
   if (menuText !== undefined) {
     base.menuText = menuText || undefined;

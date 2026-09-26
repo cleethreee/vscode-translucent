@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -233,14 +233,20 @@
           "vscode-translucent.text.menuColor": {
             "type": "string",
             "format": "color-hex",
-            "order": 1,
+            "order": 2,
             "markdownDescription": "Text colour in menus (right-click and menu bar)."
           },
           "vscode-translucent.text.remoteIndicatorColor": {
             "type": "string",
             "format": "color-hex",
-            "order": 2,
+            "order": 3,
             "markdownDescription": "Text colour of the remote indicator in the status bar (for example **WSL: Ubuntu**)."
+          },
+          "vscode-translucent.text.activeIconColor": {
+            "type": "string",
+            "format": "color-hex",
+            "order": 1,
+            "markdownDescription": "Colour of the **selected** icon in the activity bar (side or top). The other icons keep the accent colour."
           }
         }
       },

@@ -45,6 +45,13 @@ describe("layers: colours", () => {
     assert.strictEqual(Object.keys(m).length, Object.keys(ACCENT_KEYS).length);
   });
 
+  it("the selected-icon colour overrides the accent for the active activity-bar icon only", () => {
+    const m = buildColorMap({ layers: {}, accent: "#3d8a52", activeIcon: "#FDE047" });
+    assert.strictEqual(m["activityBar.foreground"], "#fde047");
+    assert.strictEqual(m["activityBarTop.foreground"], "#fde047");
+    assert.strictEqual(m["activityBar.inactiveForeground"], "#3d8a52");
+  });
+
   it("a layer sets every key it owns", () => {
     const m = buildColorMap({ layers: { menus: { color: "#101010", opacity: 0.5 } } });
     for (const k of LAYER_KEYS.menus) {

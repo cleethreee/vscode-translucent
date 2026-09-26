@@ -59,6 +59,7 @@ export interface ColorSettings {
   layers: Partial<Record<LayerName, Layer>>;
   accent?: string;          // "#rrggbb"; empty = leave the theme's own accents alone
   menuText?: string;        // "#rrggbb"
+  activeIcon?: string;      // the selected icon in the activity bar (side or top); overrides the accent there
   statusBarRemoteText?: string;
   statusBarRemoteTint?: Layer;
 }
@@ -165,6 +166,11 @@ export function buildColorMap(s: ColorSettings): Record<string, string> {
         out[key] = value;
       }
     }
+  }
+  const activeIcon = solid(s.activeIcon);
+  if (activeIcon) {
+    out["activityBar.foreground"] = activeIcon;
+    out["activityBarTop.foreground"] = activeIcon;
   }
   const menuText = solid(s.menuText);
   if (menuText) {
