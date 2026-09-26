@@ -108,6 +108,23 @@ const pinned = blockFix("pinned-message", "claudePinnedMessageBackground", "the 
   + `mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent)}}`);
 export const claudePinnedMessage = pinned.fix;
 
+// Continue runs its agent's terminal commands in the background and reads their output, but only when VS Code is
+// not connected to a remote. In a WSL window it instead types each command into a visible terminal, can't read the
+// output, and opens the terminal every time. The extension runs inside WSL, so running them the local way works there.
+const CONTINUE_LOCAL = 'LOCAL_ONLY = ["", "local"];';
+
+export const continueWslCommands: ExtensionFix = {
+  setting: "continueWslCommands",
+  extensionId: "continue.continue",
+  label: "Continue",
+  what: "background terminal commands in WSL",
+  file: "out/extension.js",
+  isPatched: (text) => text.includes(`/* ${MARK}:continue-wsl */`),
+  patch: (text) => text.includes(CONTINUE_LOCAL)
+    ? text.replace(CONTINUE_LOCAL, `LOCAL_ONLY = ["", "local", "wsl"]; /* ${MARK}:continue-wsl */`)
+    : undefined,
+};
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -140,7 +157,8 @@ export const antigravityGlass: ExtensionFix = {
 
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
-export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass];
+export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass,
+  continueWslCommands];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {

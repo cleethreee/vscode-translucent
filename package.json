@@ -429,6 +429,12 @@
             "format": "color",
             "order": 0.7,
             "markdownDescription": "**Claude Code:** a backing colour for your message when Claude pins it to the top of the panel while you scroll. On a see-through window the pinned message otherwise sits on top of the text scrolling under it. A partly see-through colour (e.g. `#221716e6`) keeps the glass look; the area behind it is also blurred. Leave empty for none.\n\nA marked block in Claude Code's stylesheet, re-applied after updates and taken out when cleared."
+          },
+          "vscode-translucent.extensionFixes.continueWslCommands": {
+            "type": "boolean",
+            "default": false,
+            "order": 2,
+            "markdownDescription": "**Continue (WSL):** run the agent's terminal commands in the background and read their output, instead of typing each one into a visible terminal. Continue only does this outside remote windows; in WSL the extension runs inside Linux, so the background way works.\\n\\nThis edits Continue's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change."
           }
         }
       },
