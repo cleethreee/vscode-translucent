@@ -75,8 +75,12 @@ export function activate(context: vscode.ExtensionContext) {
   void applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
   syncFixes(context);
   context.subscriptions.push(
-    // An extension update replaces its files and drops the fix; put it back.
+    // An extension update replaces its files and drops the fix; put it back. Installs on the remote side (WSL) don't
+    // always raise onDidChange here, so the fixes are also re-checked when the window regains focus and every two
+    // minutes. A check only reads two small files; nothing is written unless a fix is actually missing.
     vscode.extensions.onDidChange(() => syncFixes(context)),
+    vscode.window.onDidChangeWindowState((s) => { if (s.focused) { syncFixes(context); } }),
+    { dispose: ((t) => () => clearInterval(t))(setInterval(() => syncFixes(context), 120_000)) },
     vscode.commands.registerCommand("vscode-translucent.reapplyExtensionFixes", () => syncFixes(context)),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("vscode-translucent.extensionFixes") || e.affectsConfiguration("vscode-translucent.layers")) {

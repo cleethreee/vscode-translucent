@@ -151,7 +151,14 @@ async function syncFixAt(context: vscode.ExtensionContext, fix: ExtensionFix, di
  * Make every fix match its setting. Runs at startup and whenever extensions change, so a fix lost to an extension
  * update is put back on its own; a reload is offered only when a file actually changed.
  */
-export async function syncExtensionFixes(context: vscode.ExtensionContext): Promise<void> {
+let running: Promise<void> | undefined;
+
+export function syncExtensionFixes(context: vscode.ExtensionContext): Promise<void> {
+  running ??= syncAll(context).finally(() => { running = undefined; });
+  return running;
+}
+
+async function syncAll(context: vscode.ExtensionContext): Promise<void> {
   const applied: string[] = [];
   const removed: string[] = [];
   const failed: string[] = [];
