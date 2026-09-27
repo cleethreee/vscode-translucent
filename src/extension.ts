@@ -12,7 +12,7 @@ import * as mainJs from "./patchers/main-js";
 import * as workbenchJs from "./patchers/workbench-js";
 import { compareVersions } from "./utils/version";
 import { applyLayers, removeLayers } from "./layers/apply";
-import { syncExtensionFixes } from "./fixes/apply";
+import { fixTargetsFingerprint, syncExtensionFixes } from "./fixes/apply";
 
 async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
   const prev = context.globalState.get<string>("version");
@@ -70,7 +70,10 @@ function syncFixes(context: vscode.ExtensionContext) {
   void syncExtensionFixes(context).catch((err: unknown) => handleError("extension fixes", err));
 }
 
+let lastTargets = "";
+
 export function activate(context: vscode.ExtensionContext) {
+  void fixTargetsFingerprint().then((f) => { lastTargets = f; }, () => undefined);
   void checkAutoPatchOnUpdate(context);
   void applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
   syncFixes(context);
@@ -78,7 +81,14 @@ export function activate(context: vscode.ExtensionContext) {
     // An extension update replaces its files and drops the fix; put it back. Installs on the remote side (WSL) don't
     // always raise onDidChange here, so the fixes are also re-checked when the window regains focus and every two
     // minutes. A check only reads two small files; nothing is written unless a fix is actually missing.
-    vscode.extensions.onDidChange(() => syncFixes(context)),
+    // Only when a patched extension itself changed; other extensions' installs (Rooms and the rest) are left alone.
+    vscode.extensions.onDidChange(async () => {
+      const now = await fixTargetsFingerprint().catch(() => "");
+      if (now !== lastTargets) {
+        lastTargets = now;
+        syncFixes(context);
+      }
+    }),
     vscode.window.onDidChangeWindowState((s) => { if (s.focused) { syncFixes(context); } }),
     { dispose: ((t) => () => clearInterval(t))(setInterval(() => syncFixes(context), 120_000)) },
     vscode.commands.registerCommand("vscode-translucent.reapplyExtensionFixes", () => syncFixes(context)),

@@ -84,6 +84,20 @@ async function findInstalls(extensionId: string): Promise<vscode.Uri[]> {
   return [...found.values()];
 }
 
+/**
+ * Which copies of the patched extensions are installed (Claude Code, Antigravity), as one string. An extensions
+ * change that leaves this the same (another extension installed or updated, such as Rooms) is none of Translucent's
+ * business, so it doesn't re-check its fixes for it (27 Sept 2026).
+ */
+export async function fixTargetsFingerprint(): Promise<string> {
+  const ids = [...new Set(FIXES.map((f) => f.extensionId))].sort();
+  const parts: string[] = [];
+  for (const id of ids) {
+    parts.push(...(await findInstalls(id)).map((u) => u.toString()).sort());
+  }
+  return parts.join("|");
+}
+
 type Outcome = "applied" | "removed" | "failed" | undefined;
 
 /** Apply or take back one fix in every installed copy. Returns what happened, for the reload message. */
