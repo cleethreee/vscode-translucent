@@ -126,10 +126,15 @@ export const continueWslCommands: ExtensionFix = {
 };
 
 // Continue opens every Terminal block in its chat fully expanded, so long commands and their output flood the chat.
-// This starts them folded, with the command's first line (cut to 70 characters) in the header, so an approval shows a
-// short summary; click the arrow to see the whole command and its output.
+// This starts them folded, with a Claude Code-style header: "Bash" and a short description of what the command does
+// (the model now gives one, see continueCommandDescription), or the command's first line when there is none. Click the
+// arrow to see the whole command and its output; hover the header for the full command.
 const TERMINAL_OPEN = 'const s=fr(),[l,c]=g.useState(!0),[u,d]=g.useState(!1),f=(i==null?void 0:i.status)==="calling"';
 const TERMINAL_LABEL = 'b.jsx("span",{className:"text-description ml-2 select-none",children:"Terminal"})';
+const TERMINAL_HEADER = 'b.jsxs("span",{className:"ml-2 select-none truncate",title:e,children:['
+  + 'b.jsx("span",{className:"font-semibold",style:{color:"var(--vscode-foreground)"},children:"Bash"})," ",'
+  + 'b.jsx("span",{className:"text-description",children:((i&&i.parsedArgs&&i.parsedArgs.description)||'
+  + '((e||"").split("\\n")[0].slice(0,70)+((e||"").split("\\n")[0].length>70||(e||"").includes("\\n")?" …":"")))})]})';
 
 export const continueCompactTerminal: ExtensionFix = {
   setting: "continueCompactTerminal",
@@ -137,13 +142,29 @@ export const continueCompactTerminal: ExtensionFix = {
   label: "Continue",
   what: "folded terminal blocks",
   file: "gui/assets/index.js",
-  isPatched: (text) => text.includes(`/* ${MARK}:continue-terminal */`),
+  isPatched: (text) => text.includes(`/* ${MARK}:continue-terminal2 */`),
   patch: (text) => text.includes(TERMINAL_OPEN) && text.includes(TERMINAL_LABEL)
     ? text
-      .replace(TERMINAL_OPEN, TERMINAL_OPEN.replace("g.useState(!0)", "g.useState(!1)") + `/* ${MARK}:continue-terminal */`)
-      .replace(TERMINAL_LABEL, 'b.jsx("span",{className:"text-description ml-2 select-none truncate",title:e,children:l?"Terminal":'
-        + '"Terminal · "+(e||"").split("\\n")[0].slice(0,70)+((e||"").split("\\n")[0].length>70||(e||"").includes("\\n")?" …":"")})')
+      .replace(TERMINAL_OPEN, TERMINAL_OPEN.replace("g.useState(!0)", "g.useState(!1)") + `/* ${MARK}:continue-terminal2 */`)
+      .replace(TERMINAL_LABEL, TERMINAL_HEADER)
     : undefined,
+};
+
+// Continue's terminal tool only takes the command, so there is nothing short to show when asking to run it. This adds
+// a "description" argument (5-10 words, like Claude Code's Bash tool) that the model fills in; the folded header shows it.
+const DESC_FROM = 'required: ["command"],\n          properties: {\n            command: {\n              type: "string",\n              description: "The command to run. This will be passed directly into the IDE shell."\n            },';
+const DESC_TO = 'required: ["command", "description"],\n          properties: {\n            command: {\n              type: "string",\n              description: "The command to run. This will be passed directly into the IDE shell."\n            },'
+  + `\n            description: { ${`/* ${MARK}:continue-desc */`}\n              type: "string",\n              description: "What this command does, in 5-10 plain words (e.g. 'List the Gmail labels', 'Run the task list script'). Shown to the user when asking to run it."\n            },`;
+
+export const continueCommandDescription: ExtensionFix = {
+  setting: "continueCompactTerminal",
+  extensionId: "continue.continue",
+  label: "Continue",
+  what: "command descriptions",
+  file: "out/extension.js",
+  isPatched: (text) => text.includes(`/* ${MARK}:continue-desc */`),
+  patch: (text) => (text.includes(DESC_FROM) ? text.replace(DESC_FROM, DESC_TO) : undefined),
+  unpatch: (text) => text.split(DESC_TO).join(DESC_FROM),
 };
 
 // Auto mode for Continue (the user asked for this on 26 Sept 2026). Continue's "Automatic" tool policy still asks for
@@ -231,7 +252,7 @@ export const antigravityGlass: ExtensionFix = {
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
 export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass,
-  continueWslCommands, continueCompactTerminal, continueAutoMode];
+  continueWslCommands, continueCompactTerminal, continueCommandDescription, continueAutoMode];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {
