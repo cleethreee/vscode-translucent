@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.25",
+  "version": "0.4.0",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -429,30 +429,6 @@
             "format": "color",
             "order": 0.7,
             "markdownDescription": "**Claude Code:** a backing colour for your message when Claude pins it to the top of the panel while you scroll. On a see-through window the pinned message otherwise sits on top of the text scrolling under it. A partly see-through colour (e.g. `#221716e6`) keeps the glass look; the area behind it is also blurred. Leave empty for none.\n\nA marked block in Claude Code's stylesheet, re-applied after updates and taken out when cleared."
-          },
-          "vscode-translucent.extensionFixes.continueWslCommands": {
-            "type": "boolean",
-            "default": false,
-            "order": 2,
-            "markdownDescription": "**Continue (WSL):** run the agent's terminal commands in the background and read their output, instead of typing each one into a visible terminal. Continue only does this outside remote windows; in WSL the extension runs inside Linux, so the background way works.\\n\\nThis edits Continue's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change."
-          },
-          "vscode-translucent.extensionFixes.continueCompactTerminal": {
-            "type": "boolean",
-            "default": false,
-            "order": 3,
-            "markdownDescription": "**Continue:** approvals like Claude Code's. The chat's Terminal blocks start folded with a one-line header, **Bash** and a short description of what the command does (the model is asked for one), so an approval is one line; click the arrow for the whole command and its output.\\n\\nThis edits Continue's own installed files (a backup or a marked change, taken back out when you turn this off). It is checked again whenever extensions change."
-          },
-          "vscode-translucent.extensionFixes.continueAutoMode": {
-            "type": "boolean",
-            "default": false,
-            "order": 4,
-            "markdownDescription": "**Continue:** a real auto mode. With a tool set to **Automatic**, commands Continue doesn't recognise (like running your own scripts) run without asking; Continue's own high-risk checks still ask or block. Hard rules are added on top for commands and files: `/home/mini` and \"NOT TO BE SHARED\" folders are blocked; `sudo`, key and sign-in files (`.keys.env`, `token.json`, `~/.claude`, `~/.codex`), `git push` and publishing always ask. Tools on **Ask First** still ask for everything.\\n\\nThis edits Continue's own installed files (a marked change that is taken out again when you turn this off). It is checked again whenever extensions change."
-          },
-          "vscode-translucent.extensionFixes.continueWslGrep": {
-            "type": "boolean",
-            "default": false,
-            "order": 2.5,
-            "markdownDescription": "**Continue (WSL):** turn on the agent's **Grep Search** tool (search inside files). Continue removes it in remote windows, but in WSL the extension runs next to the files with its own ripgrep, so it works. Without it the agent can only find files by name.\\n\\nThis edits Continue's own installed files (a marked change that is taken out again when you turn this off). It is checked again whenever extensions change."
           }
         }
       },
