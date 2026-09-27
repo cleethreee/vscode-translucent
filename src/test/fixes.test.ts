@@ -105,7 +105,7 @@ describe("other extensions: Continue auto mode", () => {
   it("patches all three places and takes itself back out exactly", () => {
     const out = continueAutoMode.patch(src);
     assert.ok(out && continueAutoMode.isPatched(out));
-    assert.ok(out.includes("__tapeHardRules(__continueTerminalSecurity("));
+    assert.ok(out.includes("__tapeHardRules(__tapeAllowList(basePolicy, __continueTerminalSecurity("));
     assert.strictEqual(continueAutoMode.unpatch(out), src);
   });
 
@@ -119,6 +119,27 @@ describe("other extensions: Continue auto mode", () => {
     assert.strictEqual(fn("allowedWithoutPermission", "ls -la ~/.claude/"), "allowedWithPermission");
     assert.strictEqual(fn("allowedWithoutPermission", "git push origin main"), "allowedWithPermission");
     assert.strictEqual(fn("allowedWithoutPermission", "./venv/bin/python list_tasks.py"), "allowedWithoutPermission");
+  });
+
+  it("the allow-list lets matching commands run on Automatic, never a second command glued on", () => {
+    const fs = require("fs"), os = require("os"), path = require("path");
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "home-"));
+    fs.mkdirSync(path.join(home, ".continue"));
+    fs.writeFileSync(path.join(home, ".continue", "auto-allow.txt"),
+      '# mine\n./venv/bin/python *.py\ncd "/home/leaf/projects/*" && ./venv/bin/python *.py\n');
+    const realHome = os.homedir; os.homedir = () => home;
+    try {
+      const out = continueAutoMode.patch(src);
+      const pre = out.slice(0, out.indexOf("function evaluateTerminalCommandSecurity"));
+      const allow = new Function("require", pre + "return __tapeAllowList;")(require);
+      const A = "allowedWithoutPermission", P = "allowedWithPermission";
+      assert.strictEqual(allow(A, P, "./venv/bin/python list_tasks.py"), A);
+      assert.strictEqual(allow(A, P, 'cd "/home/leaf/projects/Gmail MCP" && ./venv/bin/python manage_labels.py'), A);
+      assert.strictEqual(allow(A, P, "./venv/bin/python x.py; rm -rf ~ ; echo a.py"), P, "no second command");
+      assert.strictEqual(allow(A, P, "./venv/bin/python x.py | sh"), P);
+      assert.strictEqual(allow(P, P, "./venv/bin/python list_tasks.py"), P, "Ask First still asks");
+      assert.strictEqual(allow(A, "disabled", "./venv/bin/python list_tasks.py"), "disabled", "blocked stays blocked");
+    } finally { os.homedir = realHome; }
   });
 
   it("leaves a changed Continue alone", () => {

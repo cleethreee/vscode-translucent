@@ -174,14 +174,36 @@ export const continueCommandDescription: ExtensionFix = {
 //    ask or block, and "Ask First" still asks for everything);
 //  - adds hard rules on top, for commands and file paths alike: anything touching /home/mini or a "NOT TO BE SHARED"
 //    folder is blocked; sudo, key and sign-in files (.keys.env, token.json, auth.json, ~/.claude, ~/.codex),
-//    git push and publishing always ask.
-const AUTO_MARK = `/* ${MARK}:continue-auto */`;
+//    git push and publishing always ask;
+//  - honours the user's allow-list (~/.continue/auto-allow.txt) for commands Continue rates high-risk, like running
+//    their own scripts with the project's venv Python. Hard rules still win over the allow-list.
+const AUTO_MARK = `/* ${MARK}:continue-auto2 */`;
 const AUTO_RULES = String.raw`function __tapeHardRules(policy, text) {
   const t = String(text || "");
   if (/\/home\/mini\b|NOT[ _-]TO[ _-]BE[ _-]SHARED/i.test(t)) return "disabled";
   if (policy === "disabled") return policy;
   if (/(^|[\s;&|(])sudo\b|\.keys\.env|token\.json|auth\.json|\.credentials\.json|\/\.claude\b|~\/\.claude\b|\/\.codex\b|~\/\.codex\b|\bgit\s+push\b|\bnpm\s+publish\b|\bvsce\s+publish\b|\bgh\s+(release|repo)\b/i.test(t)) {
     return "allowedWithPermission";
+  }
+  return policy;
+}
+function __tapeAllowList(basePolicy, policy, command) {
+  // The user's own allow-list (~/.continue/auto-allow.txt, one pattern per line, "#" for comments): on Automatic, a
+  // command matching a pattern runs even if Continue rates it high-risk. "*" matches anything except shell
+  // punctuation (; & | \` $ < > and new lines), so a pattern can't be stretched to cover a second command.
+  if (basePolicy !== "allowedWithoutPermission" || policy !== "allowedWithPermission") return policy;
+  let lines = [];
+  try {
+    lines = require("fs").readFileSync(require("path").join(require("os").homedir(), ".continue", "auto-allow.txt"), "utf8").split(/\r?\n/);
+  } catch (e) {
+    return policy;
+  }
+  const cmd = String(command || "").trim();
+  for (const raw of lines) {
+    const p = raw.trim();
+    if (!p || p.startsWith("#")) continue;
+    const re = new RegExp("^" + p.split("*").map((x) => x.replace(/[.+?^\${}()|[\]\\]/g, "\\$&")).join("[^;&|\`$<>\\n]*") + "$");
+    if (re.test(cmd)) return "allowedWithoutPermission";
   }
   return policy;
 }
@@ -194,7 +216,7 @@ const AUTO_REPLACEMENTS: [string, string][] = [
   [
     "function evaluateTerminalCommandSecurity(basePolicy, command) {",
     AUTO_RULES + "function evaluateTerminalCommandSecurity(basePolicy, command) { " + AUTO_MARK
-      + "\n  return __tapeHardRules(__continueTerminalSecurity(basePolicy, command), command);\n}\n"
+      + "\n  return __tapeHardRules(__tapeAllowList(basePolicy, __continueTerminalSecurity(basePolicy, command), command), command);\n}\n"
       + "function __continueTerminalSecurity(basePolicy, command) {",
   ],
   [
