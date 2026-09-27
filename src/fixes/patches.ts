@@ -146,6 +146,58 @@ export const continueCompactTerminal: ExtensionFix = {
     : undefined,
 };
 
+// Auto mode for Continue (the user asked for this on 26 Sept 2026). Continue's "Automatic" tool policy still asks for
+// any command it doesn't recognise (every script run), and never asks for file tools inside the open folder, which is
+// the whole home folder here. This:
+//  - lets unrecognised commands run when the tool is on Automatic (Continue's own high-risk and critical checks still
+//    ask or block, and "Ask First" still asks for everything);
+//  - adds hard rules on top, for commands and file paths alike: anything touching /home/mini or a "NOT TO BE SHARED"
+//    folder is blocked; sudo, key and sign-in files (.keys.env, token.json, auth.json, ~/.claude, ~/.codex),
+//    git push and publishing always ask.
+const AUTO_MARK = `/* ${MARK}:continue-auto */`;
+const AUTO_RULES = String.raw`function __tapeHardRules(policy, text) {
+  const t = String(text || "");
+  if (/\/home\/mini\b|NOT[ _-]TO[ _-]BE[ _-]SHARED/i.test(t)) return "disabled";
+  if (policy === "disabled") return policy;
+  if (/(^|[\s;&|(])sudo\b|\.keys\.env|token\.json|auth\.json|\.credentials\.json|\/\.claude\b|~\/\.claude\b|\/\.codex\b|~\/\.codex\b|\bgit\s+push\b|\bnpm\s+publish\b|\bvsce\s+publish\b|\bgh\s+(release|repo)\b/i.test(t)) {
+    return "allowedWithPermission";
+  }
+  return policy;
+}
+`;
+const AUTO_REPLACEMENTS: [string, string][] = [
+  [
+    '  if (isSafeCommand(baseCommand, args2)) {\n    return "allowedWithoutPermission";\n  }\n  return "allowedWithPermission";\n}\n',
+    '  if (isSafeCommand(baseCommand, args2)) {\n    return "allowedWithoutPermission";\n  }\n  return "allowedWithoutPermission"; ' + AUTO_MARK + '\n}\n',
+  ],
+  [
+    "function evaluateTerminalCommandSecurity(basePolicy, command) {",
+    AUTO_RULES + "function evaluateTerminalCommandSecurity(basePolicy, command) { " + AUTO_MARK
+      + "\n  return __tapeHardRules(__continueTerminalSecurity(basePolicy, command), command);\n}\n"
+      + "function __continueTerminalSecurity(basePolicy, command) {",
+  ],
+  [
+    "return evaluateFileAccessPolicy(basePolicy, resolvedPath3.isWithinWorkspace);",
+    "return __tapeHardRules(evaluateFileAccessPolicy(basePolicy, resolvedPath3.isWithinWorkspace), JSON.stringify(resolvedPath3)); " + AUTO_MARK,
+  ],
+];
+
+export const continueAutoMode: ExtensionFix = {
+  setting: "continueAutoMode",
+  extensionId: "continue.continue",
+  label: "Continue",
+  what: "auto mode with hard rules",
+  file: "out/extension.js",
+  isPatched: (text) => text.includes(AUTO_MARK),
+  patch: (text) => {
+    if (!AUTO_REPLACEMENTS.every(([from]) => text.includes(from))) {
+      return undefined;
+    }
+    return AUTO_REPLACEMENTS.reduce((t, [from, to]) => t.split(from).join(to), text);
+  },
+  unpatch: (text) => AUTO_REPLACEMENTS.reduce((t, [from, to]) => t.split(to).join(from), text),
+};
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -179,7 +231,7 @@ export const antigravityGlass: ExtensionFix = {
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
 export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass,
-  continueWslCommands, continueCompactTerminal];
+  continueWslCommands, continueCompactTerminal, continueAutoMode];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {

@@ -90,3 +90,38 @@ describe("other extensions: Claude user-message dot", () => {
     assert.strictEqual(claudeUserDot.unpatch!(both), claudeUserBar.patch(css, "#3d8a52"));
   });
 });
+
+describe("other extensions: Continue auto mode", () => {
+  const { continueAutoMode } = require("../fixes/patches");
+  const src = [
+    "function evaluateTerminalCommandSecurity(basePolicy, command) {",
+    "  return basePolicy;",
+    "}",
+    "function evaluateSingleCommand(a, b) {",
+    '  if (isSafeCommand(baseCommand, args2)) {\n    return "allowedWithoutPermission";\n  }\n  return "allowedWithPermission";\n}\n',
+    "x = () => { return evaluateFileAccessPolicy(basePolicy, resolvedPath3.isWithinWorkspace); };",
+  ].join("\n");
+
+  it("patches all three places and takes itself back out exactly", () => {
+    const out = continueAutoMode.patch(src);
+    assert.ok(out && continueAutoMode.isPatched(out));
+    assert.ok(out.includes("__tapeHardRules(__continueTerminalSecurity("));
+    assert.strictEqual(continueAutoMode.unpatch(out), src);
+  });
+
+  it("the hard rules block, ask and pass as designed", () => {
+    const out = continueAutoMode.patch(src);
+    const fn = new Function(out.slice(0, out.indexOf("function evaluateTerminalCommandSecurity")) + "return __tapeHardRules;")();
+    assert.strictEqual(fn("allowedWithoutPermission", "cat /home/mini/x"), "disabled");
+    assert.strictEqual(fn("allowedWithoutPermission", "ls '/mnt/c/Local Data (NOT TO BE SHARED)'"), "disabled");
+    assert.strictEqual(fn("allowedWithoutPermission", "sudo apt install x"), "allowedWithPermission");
+    assert.strictEqual(fn("allowedWithoutPermission", "cat ~/.keys.env"), "allowedWithPermission");
+    assert.strictEqual(fn("allowedWithoutPermission", "ls -la ~/.claude/"), "allowedWithPermission");
+    assert.strictEqual(fn("allowedWithoutPermission", "git push origin main"), "allowedWithPermission");
+    assert.strictEqual(fn("allowedWithoutPermission", "./venv/bin/python list_tasks.py"), "allowedWithoutPermission");
+  });
+
+  it("leaves a changed Continue alone", () => {
+    assert.strictEqual(continueAutoMode.patch("nothing here"), undefined);
+  });
+});
