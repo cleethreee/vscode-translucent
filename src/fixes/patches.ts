@@ -219,6 +219,35 @@ export const continueAutoMode: ExtensionFix = {
   unpatch: (text) => AUTO_REPLACEMENTS.reduce((t, [from, to]) => t.split(to).join(from), text),
 };
 
+// Continue drops its Grep Search tool (search inside files) in any remote window, and its search function refuses to
+// run there. In WSL the extension runs inside Linux next to the files and ships its own ripgrep for Linux, so both
+// work. Without this the agent can only find files by name (glob) and has to read them one by one.
+const GREP_MARK = `/* ${MARK}:continue-grep */`;
+const GREP_REPLACEMENTS: [string, string][] = [
+  [
+    "if (!isRemote) {\n        tools.push(grepSearchTool);\n      }",
+    "if (true) { " + GREP_MARK + "\n        tools.push(grepSearchTool);\n      }",
+  ],
+  [
+    'if (vscode35.env.remoteName) {\n          throw new Error("Ripgrep not supported, this workspace is remote");',
+    'if (vscode35.env.remoteName && vscode35.env.remoteName !== "wsl") { ' + GREP_MARK
+      + '\n          throw new Error("Ripgrep not supported, this workspace is remote");',
+  ],
+];
+
+export const continueWslGrep: ExtensionFix = {
+  setting: "continueWslGrep",
+  extensionId: "continue.continue",
+  label: "Continue",
+  what: "grep search in WSL",
+  file: "out/extension.js",
+  isPatched: (text) => text.includes(GREP_MARK),
+  patch: (text) => (GREP_REPLACEMENTS.every(([from]) => text.includes(from))
+    ? GREP_REPLACEMENTS.reduce((t, [from, to]) => t.split(from).join(to), text)
+    : undefined),
+  unpatch: (text) => GREP_REPLACEMENTS.reduce((t, [from, to]) => t.split(to).join(from), text),
+};
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -252,7 +281,8 @@ export const antigravityGlass: ExtensionFix = {
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
 export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass,
-  continueWslCommands, continueCompactTerminal, continueCommandDescription, continueAutoMode];
+  continueWslCommands, continueCompactTerminal, continueCommandDescription, continueAutoMode,
+  continueWslGrep];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {
