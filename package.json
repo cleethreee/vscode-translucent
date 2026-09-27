@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.3.20",
+  "version": "0.3.21",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -435,6 +435,12 @@
             "default": false,
             "order": 2,
             "markdownDescription": "**Continue (WSL):** run the agent's terminal commands in the background and read their output, instead of typing each one into a visible terminal. Continue only does this outside remote windows; in WSL the extension runs inside Linux, so the background way works.\\n\\nThis edits Continue's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change."
+          },
+          "vscode-translucent.extensionFixes.continueCompactTerminal": {
+            "type": "boolean",
+            "default": false,
+            "order": 3,
+            "markdownDescription": "**Continue:** start the chat's Terminal blocks folded, with the command's first line in the header, so approvals show a short summary instead of the whole command and output. Click the arrow to open one.\\n\\nThis edits Continue's own installed files (a backup is kept, and turning this off puts it back). It is checked again whenever extensions change."
           }
         }
       },

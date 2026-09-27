@@ -125,6 +125,27 @@ export const continueWslCommands: ExtensionFix = {
     : undefined,
 };
 
+// Continue opens every Terminal block in its chat fully expanded, so long commands and their output flood the chat.
+// This starts them folded, with the command's first line (cut to 70 characters) in the header, so an approval shows a
+// short summary; click the arrow to see the whole command and its output.
+const TERMINAL_OPEN = 'const s=fr(),[l,c]=g.useState(!0),[u,d]=g.useState(!1),f=(i==null?void 0:i.status)==="calling"';
+const TERMINAL_LABEL = 'b.jsx("span",{className:"text-description ml-2 select-none",children:"Terminal"})';
+
+export const continueCompactTerminal: ExtensionFix = {
+  setting: "continueCompactTerminal",
+  extensionId: "continue.continue",
+  label: "Continue",
+  what: "folded terminal blocks",
+  file: "gui/assets/index.js",
+  isPatched: (text) => text.includes(`/* ${MARK}:continue-terminal */`),
+  patch: (text) => text.includes(TERMINAL_OPEN) && text.includes(TERMINAL_LABEL)
+    ? text
+      .replace(TERMINAL_OPEN, TERMINAL_OPEN.replace("g.useState(!0)", "g.useState(!1)") + `/* ${MARK}:continue-terminal */`)
+      .replace(TERMINAL_LABEL, 'b.jsx("span",{className:"text-description ml-2 select-none truncate",title:e,children:l?"Terminal":'
+        + '"Terminal · "+(e||"").split("\\n")[0].slice(0,70)+((e||"").split("\\n")[0].length>70||(e||"").includes("\\n")?" …":"")})')
+    : undefined,
+};
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -158,7 +179,7 @@ export const antigravityGlass: ExtensionFix = {
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
 export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass,
-  continueWslCommands];
+  continueWslCommands, continueCompactTerminal];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {
