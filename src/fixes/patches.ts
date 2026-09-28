@@ -108,6 +108,19 @@ const pinned = blockFix("pinned-message", "claudePinnedMessageBackground", "the 
   + `mask-image:linear-gradient(to bottom,#000 calc(100% - 12px),transparent)}}`);
 export const claudePinnedMessage = pinned.fix;
 
+// Every message row in the Claude panel paints its own background (--sticky-bg, which resolves to the editor
+// background), so on a tinted see-through editor each of your messages sat in a second, darker band: the editor's
+// colour laid over itself. This gives the rows one colour of your choosing (clear, #00000000, makes them flush with
+// the editor) and drops the fade image that comes with it. The pinned-message backing above draws its own layer, so a
+// stuck message stays readable either way. (Clee, 28 Sept 2026: "idk why they would put two bands on top of each other".)
+// The IN/OUT tool boxes do the same (--app-tool-background, also the editor background), so they're included.
+const ROW = '[class*="message_"][class*="userMessageContainer_"],[class*="message_"][class*="stickyHeader_"]';
+const TOOL = '[class*="toolBody_"],[class*="inputJson_"],[class*="otherInput_"]';
+const rows = blockFix("message-rows", "claudeMessageBackground", "the message rows and tool boxes", (c) =>
+  `${ROW}{background-color:${c} !important;background-image:none !important}`
+  + `${TOOL}{background:${c} !important}`);
+export const claudeMessageRows = rows.fix;
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -140,7 +153,7 @@ export const antigravityGlass: ExtensionFix = {
 
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
-export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, antigravityGlass];
+export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, claudeMessageRows, antigravityGlass];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {

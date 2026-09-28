@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { antigravityCss, antigravityGlass, claudeToolBoxes, claudeUserBar, claudeUserDot, MARK } from "../fixes/patches";
+import { antigravityCss, antigravityGlass, claudeMessageRows, claudeToolBoxes, claudeUserBar, claudeUserDot, MARK } from "../fixes/patches";
 import { buildColorMap, PRESETS } from "../layers/colors";
 
 describe("other extensions: Claude Code", () => {
@@ -91,3 +91,18 @@ describe("other extensions: Claude user-message dot", () => {
   });
 });
 
+
+describe("other extensions: Claude message rows and tool boxes", () => {
+  const css = ".message_07S1Yg{background:var(--sticky-bg)}.toolBody_ZUQaOA{background:var(--app-tool-background)}";
+
+  it("gives the rows and tool boxes one colour, and takes it out again", () => {
+    const clear = claudeMessageRows.patch(css, "#00000000")!;
+    assert.ok(clear.includes("background-color:#00000000 !important") && clear.includes('[class*="toolBody_"]'));
+    assert.ok(claudeMessageRows.isPatched(clear, "#00000000"));
+    assert.strictEqual(claudeMessageRows.unpatch!(clear), css);
+  });
+
+  it("skips anything that isn't a hex colour", () => {
+    assert.strictEqual(claudeMessageRows.patch(css, "none; } body {"), undefined);
+  });
+});
