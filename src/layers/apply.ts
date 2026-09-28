@@ -27,12 +27,17 @@ function explicit<T>(cfg: vscode.WorkspaceConfiguration, key: string): T | undef
 /** What the settings ask for: the preset, with anything the user set explicitly layered on top. */
 export function readColorSettings(): ColorSettings | undefined {
   const cfg = vscode.workspace.getConfiguration(NS);
-  if (!cfg.get<boolean>("layers.enabled", false)) {
+  const surface = explicit<string>(cfg, "surface.color") || undefined;
+  const layersOn = cfg.get<boolean>("layers.enabled", false);
+  if (!layersOn && !surface) {
     return undefined;
   }
+  // With layers off, a surface still applies on its own (plus any accent or text colour you set yourself).
   const presetName = cfg.get<string>("layers.preset", "forestGlass");
-  const base: ColorSettings = JSON.parse(JSON.stringify(PRESETS[presetName] ?? { layers: {} }));
-  for (const name of LAYER_NAMES) {
+  const base: ColorSettings = layersOn ? JSON.parse(JSON.stringify(PRESETS[presetName] ?? { layers: {} })) : { layers: {} };
+  base.surface = surface;
+  base.borders = explicit<string>(cfg, "surface.borderColor") || undefined;
+  for (const name of layersOn ? LAYER_NAMES : []) {
     const color = explicit<string>(cfg, `layers.${name}.color`);
     const opacity = explicit<number>(cfg, `layers.${name}.opacity`);
     if (color === undefined && opacity === undefined) {

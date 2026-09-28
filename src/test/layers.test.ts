@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS, scopeMatches } from "../layers/colors";
+import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS, scopeMatches, SURFACE_OUTER, SURFACE_INNER, SURFACE_BORDERS } from "../layers/colors";
 import { buildCSS } from "../styles";
 
 describe("layers: colours", () => {
@@ -127,5 +127,35 @@ describe("theme blocks", () => {
     assert.ok(!scopeMatches("[Vira*]", "Dark+"));
     assert.ok(!scopeMatches("[Dark+]", "Dark Modern"), "+ is literal, not a pattern");
     assert.ok(!scopeMatches("editor.background", "Dark+"));
+  });
+});
+
+describe("surface: one colour for the whole window", () => {
+  it("tints every outer surface once, clears what sits on top, and draws every line in one colour", () => {
+    const map = buildColorMap({ layers: {}, surface: "#0a0f0c33" });
+    for (const k of SURFACE_OUTER) { assert.strictEqual(map[k], "#0a0f0c33", k); }
+    for (const k of SURFACE_INNER) { assert.strictEqual(map[k], "#00000000", k); }
+    for (const k of SURFACE_BORDERS) { assert.strictEqual(map[k], "#00000000", k); }
+  });
+
+  it("uses the border colour when one is given", () => {
+    const map = buildColorMap({ layers: {}, surface: "#0a0f0c33", borders: "#0a0f0c33" });
+    assert.strictEqual(map["sideBar.border"], "#0a0f0c33");
+  });
+
+  it("lets layers, accent and text override the surface", () => {
+    const map = buildColorMap({ layers: { inputs: { color: "#0a0f0c", opacity: 0.2 } }, surface: "#0a0f0c33", accent: "#3d8a52" });
+    assert.strictEqual(map["input.background"], "#0a0f0c33");
+    assert.strictEqual(map["activityBar.activeBorder"], "#3d8a52");
+    assert.strictEqual(map["editor.background"], "#0a0f0c33");
+  });
+
+  it("writes nothing for the surface when none is set, or when it isn't a colour", () => {
+    assert.strictEqual(buildColorMap({ layers: {} })["editor.background"], undefined);
+    assert.strictEqual(buildColorMap({ layers: {}, surface: "green" })["editor.background"], undefined);
+  });
+
+  it("never lists a key as both outer and inner", () => {
+    for (const k of SURFACE_OUTER) { assert.ok(!SURFACE_INNER.includes(k), k); }
   });
 });

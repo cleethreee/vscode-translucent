@@ -61,6 +61,48 @@ export const SOFT_BORDER_KEYS: Record<string, string> = {
   "widget.shadow": "#00000000",
 };
 
+
+/**
+ * The surface (28 Sept 2026, Clee: "baseline everything and give options for the actual customizable pieces").
+ * One colour tints the window's outer surfaces once; everything that sits on top of them is cleared, so nothing is
+ * painted twice (a second coat shows as a darker box on glass); and every line takes one border colour. The layers,
+ * accent and text settings are then the only things you customise, and they're applied on top of this.
+ */
+export const SURFACE_OUTER = [
+  "editor.background", "sideBar.background", "activityBar.background", "panel.background",
+  "titleBar.activeBackground", "titleBar.inactiveBackground", "statusBar.background", "statusBar.noFolderBackground",
+  "editorGroupHeader.noTabsBackground", "sideBarStickyScroll.background",
+];
+
+/** Things drawn on top of an outer surface: cleared, so they take that surface's single coat. */
+export const SURFACE_INNER = [
+  "editorPane.background", "editorGutter.background", "breadcrumb.background", "terminal.background",
+  "sideBarSectionHeader.background", "sideBarTitle.background", "panelSectionHeader.background",
+  "commandCenter.background", "editorGroupHeader.tabsBackground",
+  "tab.activeBackground", "tab.inactiveBackground", "tab.unfocusedActiveBackground", "tab.unfocusedInactiveBackground",
+  "activityBar.activeBackground", "activityBarTop.activeBackground", "activityBarTop.background",
+  "statusBarItem.remoteBackground", "editorHoverWidget.statusBarBackground", "textCodeBlock.background",
+  "textBlockQuote.background", "button.secondaryBackground",
+];
+
+/** The dividers between panels, drawn in the one border colour. */
+export const SURFACE_BORDERS = [
+  "activityBar.border", "sideBar.border", "panel.border", "editorGroup.border",
+  "sideBySideEditor.horizontalBorder", "sideBySideEditor.verticalBorder", "titleBar.border", "statusBar.border",
+  "sideBarActivityBarTop.border", "panelSection.border",
+];
+
+/** Lines inside panels and around controls (tabs, headers, menus, inputs, buttons): cleared with a surface set. */
+export const SURFACE_INNER_BORDERS = [
+  "tab.border", "editorGroupHeader.tabsBorder", "editorGroupHeader.border", "sideBarSectionHeader.border",
+  "panelSectionHeader.border", "sideBarTitle.border", "editorOverviewRuler.border", "menu.border",
+  "menu.selectionBorder", "button.border", "input.border", "dropdown.border", "notifications.border",
+  "notificationCenter.border",
+];
+
+/** Shadows read as dark streaks on glass; with a surface set they're cleared. */
+export const SURFACE_SHADOWS = ["scrollbar.shadow", "widget.shadow"];
+
 export interface Layer {
   color: string;   // "#rrggbb"
   opacity: number; // 0..1
@@ -75,6 +117,8 @@ export interface ColorSettings {
   statusBarRemoteTint?: Layer;
   statusBarRemoteHover?: string;  // background of the remote indicator on hover
   softBorders?: boolean;          // clear or faint versions of the theme's dark lines (SOFT_BORDER_KEYS)
+  surface?: string;               // one tint for every outer surface ("#rrggbbaa"); inner ones are cleared
+  borders?: string;               // the one colour for every panel line when a surface is set (default clear)
 }
 
 /** The presets. "forestGlass" is the look set up by hand on 25-26 September 2026. */
@@ -161,6 +205,26 @@ function solid(color: string | undefined, alphaHex = ""): string | undefined {
 /** Settings -> the colour customizations to write. */
 export function buildColorMap(s: ColorSettings): Record<string, string> {
   const out: Record<string, string> = {};
+  // The surface first, so the layers, accent and text colours below can override any part of it.
+  const surface = parseHex(s.surface) ? withAlpha(s.surface, 1) : undefined;
+  if (surface) {
+    const border = (parseHex(s.borders) ? withAlpha(s.borders, 1) : undefined) ?? "#00000000";
+    for (const key of SURFACE_OUTER) {
+      out[key] = surface;
+    }
+    for (const key of SURFACE_INNER) {
+      out[key] = "#00000000";
+    }
+    for (const key of SURFACE_BORDERS) {
+      out[key] = border;
+    }
+    for (const key of SURFACE_INNER_BORDERS) {
+      out[key] = "#00000000";
+    }
+    for (const key of SURFACE_SHADOWS) {
+      out[key] = "#00000000";
+    }
+  }
   for (const name of LAYER_NAMES) {
     const layer = s.layers[name];
     if (!layer) {

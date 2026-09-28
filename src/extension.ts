@@ -63,7 +63,7 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
 
 // Settings that only change colours (Layers, accent, text) are applied live; no patch, no reload.
 // Other Extensions fixes are handled on their own too.
-const LIVE_SECTIONS = ["vscode-translucent.layers", "vscode-translucent.accent", "vscode-translucent.text",
+const LIVE_SECTIONS = ["vscode-translucent.surface", "vscode-translucent.layers", "vscode-translucent.accent", "vscode-translucent.text",
   "vscode-translucent.extensionFixes"];
 
 function syncFixes(context: vscode.ExtensionContext) {
