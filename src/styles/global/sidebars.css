@@ -1,6 +1,5 @@
 div#workbench.parts.sidebar,
 .monaco-workbench .part.sidebar,
-.style-override .monaco-pane-view .pane,
 .style-override.floating-panels .part.sidebar {
   background-color: color-mix(in srgb, var(--vscode-sideBar-background, var(--vscode-panel-background)) var(--vscode-translucent-left-sidebar-pct), transparent) !important;
   border-radius: var(--vscode-translucent-left-sidebar-border-radius, 0px) !important;
@@ -24,4 +23,11 @@ div#workbench.parts.auxiliarybar,
 .monaco-workbench .part.sidebar>.content {
   padding-right: 4px;
   box-sizing: border-box;
+}
+/* One coat for the whole sidebar: the sidebar itself is tinted above, so the panes inside it stay clear. Painting each
+   pane as well gave every section its own darker box, while the empty space below the last pane stayed lighter
+   (28 Sept 2026). */
+.monaco-workbench .part.sidebar .monaco-pane-view .pane,
+.monaco-workbench .part.auxiliarybar .monaco-pane-view .pane {
+  background-color: transparent !important;
 }
