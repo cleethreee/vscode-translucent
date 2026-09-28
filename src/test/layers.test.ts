@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS, scopeMatches, SURFACE_OUTER, SURFACE_INNER, SURFACE_BORDERS } from "../layers/colors";
+import { buildColorMap, mergeOwned, PRESETS, withAlpha, LAYER_KEYS, ACCENT_KEYS, scopeMatches, SURFACE_OUTER, SURFACE_INNER, SURFACE_BORDERS, SURFACE_BARS } from "../layers/colors";
 import { buildCSS } from "../styles";
 
 describe("layers: colours", () => {
@@ -157,5 +157,12 @@ describe("surface: one colour for the whole window", () => {
 
   it("never lists a key as both outer and inner", () => {
     for (const k of SURFACE_OUTER) { assert.ok(!SURFACE_INNER.includes(k), k); }
+  });
+});
+
+describe("surface: bars", () => {
+  it("gives the title and status bars the surface laid over itself, to match the two-coat panels", () => {
+    const map = buildColorMap({ layers: {}, surface: "#0a0f0c33" });
+    for (const k of SURFACE_BARS) { assert.strictEqual(map[k], "#0a0f0c5c", k); }
   });
 });

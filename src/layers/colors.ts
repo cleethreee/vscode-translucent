@@ -70,8 +70,16 @@ export const SOFT_BORDER_KEYS: Record<string, string> = {
  */
 export const SURFACE_OUTER = [
   "editor.background", "sideBar.background", "activityBar.background", "panel.background",
-  "titleBar.activeBackground", "titleBar.inactiveBackground", "statusBar.background", "statusBar.noFolderBackground",
   "editorGroupHeader.noTabsBackground", "sideBarStickyScroll.background",
+];
+
+/**
+ * The title and status bars are single strips, while the panels get the surface twice (the panel container, then
+ * VS Code's own paint inside it). So the bars take the colour laid over itself (alpha 1-(1-a)^2), which matched the
+ * panels by eye on 28 Sept 2026 (#0a0f0c33 -> #0a0f0c5c).
+ */
+export const SURFACE_BARS = [
+  "titleBar.activeBackground", "titleBar.inactiveBackground", "statusBar.background", "statusBar.noFolderBackground",
 ];
 
 /** Things drawn on top of an outer surface: cleared, so they take that surface's single coat. */
@@ -211,6 +219,11 @@ export function buildColorMap(s: ColorSettings): Record<string, string> {
     const border = (parseHex(s.borders) ? withAlpha(s.borders, 1) : undefined) ?? "#00000000";
     for (const key of SURFACE_OUTER) {
       out[key] = surface;
+    }
+    const [rgb, a] = parseHex(surface)!;
+    const bar = withAlpha(`#${rgb}`, 1 - (1 - a) * (1 - a));
+    for (const key of SURFACE_BARS) {
+      out[key] = bar!;
     }
     for (const key of SURFACE_INNER) {
       out[key] = "#00000000";
