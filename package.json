@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -106,7 +106,7 @@
             "default": "",
             "format": "color",
             "order": 0,
-            "markdownDescription": "**One colour for the whole window.** Tints every outer surface once (editor, sidebars, activity bar, panel, title bar, status bar) and clears everything that sits on top of them (tabs, section headers, the search box, gutters and so on), so nothing is painted twice. Use a see-through colour, e.g. `#0a0f0c33`. With this set, the panel glass settings work best at 1. Layers, accent and text colours are applied on top, so those are the only things you customise. Leave empty to keep the theme's colours."
+            "markdownDescription": "**One colour for the whole window.** Tints every outer surface once (editor, sidebars, activity bar, panel, title bar, status bar) and clears everything that sits on top of them (tabs, section headers, the search box, gutters and so on), so nothing is painted twice. Use a see-through colour, e.g. `#0a0f0c33`. With this set, every panel's glass is full automatically (the panel glass settings are ignored) and the settings page follows it, so this colour's transparency is the one knob. Layers, accent and text colours are applied on top, so those are the only things you customise. Leave empty to keep the theme's colours."
           },
           "vscode-translucent.surface.borderColor": {
             "type": "string",

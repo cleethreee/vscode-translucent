@@ -6,6 +6,11 @@ export type { EffectType, TranslucentConfig };
 export function getConfig(): TranslucentConfig {
   const cfg = vscode.workspace.getConfiguration("vscode-translucent");
   const defaultOpacity = cfg.get<number>("opacity", 0.4);
+  // With a surface colour set, its own transparency is the one knob: every panel's glass is full, so the panels show
+  // exactly that colour (the glass % multiplies the colour, so anything below 1 made each panel lighter by a different
+  // amount). The settings page follows the surface too.
+  const surface = (cfg.get<string>("surface.color", "") || "").trim();
+  const glass = (key: string, fallback: number) => (surface ? 1 : cfg.get<number>(key, fallback));
   return {
     effect: cfg.get<EffectType>("effect", "mica"),
     opacity: defaultOpacity,
@@ -13,10 +18,10 @@ export function getConfig(): TranslucentConfig {
     leftSidebarContainerBorderVisible: cfg.get<boolean>("leftSidebarContainerBorderVisible", true),
     rightSidebarContainerBorderVisible: cfg.get<boolean>("rightSidebarContainerBorderVisible", true),
     activityBarContainerBorderVisible: cfg.get<boolean>("activityBarContainerBorderVisible") ?? cfg.get<boolean>("activityBarBorderVisible", false),
-    editorContainerBackgroundOpacity: cfg.get<number>("editorContainerBackgroundOpacity", defaultOpacity),
-    leftSidebarContainerBackgroundOpacity: cfg.get<number>("leftSidebarContainerBackgroundOpacity", 0.8),
-    rightSidebarContainerBackgroundOpacity: cfg.get<number>("rightSidebarContainerBackgroundOpacity", 0.8),
-    activityBarContainerBackgroundOpacity: cfg.get<number>("activityBarContainerBackgroundOpacity") ?? cfg.get<number>("activityBarBackgroundOpacity", 0),
+    editorContainerBackgroundOpacity: glass("editorContainerBackgroundOpacity", defaultOpacity),
+    leftSidebarContainerBackgroundOpacity: glass("leftSidebarContainerBackgroundOpacity", 0.8),
+    rightSidebarContainerBackgroundOpacity: glass("rightSidebarContainerBackgroundOpacity", 0.8),
+    activityBarContainerBackgroundOpacity: surface ? 1 : (cfg.get<number>("activityBarContainerBackgroundOpacity") ?? cfg.get<number>("activityBarBackgroundOpacity", 0)),
     editorContainerBorderRadius: String(cfg.get<string | number>("editorContainerBorderRadius") ?? cfg.get<string | number>("editorContainerRound", "8px")),
     leftSidebarContainerBorderRadius: String(cfg.get<string | number>("leftSidebarContainerBorderRadius") ?? cfg.get<string | number>("leftSidebarContainerRound", "8px")),
     rightSidebarContainerBorderRadius: String(cfg.get<string | number>("rightSidebarContainerBorderRadius") ?? cfg.get<string | number>("rightSidebarContainerRound", "8px")),
@@ -24,7 +29,7 @@ export function getConfig(): TranslucentConfig {
     activityBarContainerMargin: String(cfg.get<string | number>("activityBarContainerMargin") ?? cfg.get<string | number>("activityBarMargin", "0px 2px 2px 2px")),
     activityBarContainerGap: String(cfg.get<string | number>("activityBarContainerGap") ?? cfg.get<string | number>("activityBarContainerGapBetweenWorkspace") ?? cfg.get<string | number>("activityBarGap", "0px")),
     applyToJupyterNotebook: cfg.get<boolean>("applyToJupyterNotebook", false),
-    settingsPageColor: cfg.get<string>("settingsPage.color", "#221716"),
-    settingsPageOpacity: cfg.get<number>("settingsPage.opacity", 0),
+    settingsPageColor: surface || cfg.get<string>("settingsPage.color", "#221716"),
+    settingsPageOpacity: surface ? 1 : cfg.get<number>("settingsPage.opacity", 0),
   };
 }

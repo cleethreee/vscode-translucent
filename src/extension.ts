@@ -129,7 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       // Colour-only settings are handled live above; they don't need the workbench re-patched.
-      if (LIVE_SECTIONS.some((s) => e.affectsConfiguration(s)) && !e.affectsConfiguration("vscode-translucent.effect")) {
+      if (LIVE_SECTIONS.some((s) => e.affectsConfiguration(s)) && !e.affectsConfiguration("vscode-translucent.effect") && !e.affectsConfiguration("vscode-translucent.surface")) {
         return;
       }
 
