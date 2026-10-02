@@ -14,12 +14,21 @@ import { compareVersions } from "./utils/version";
 import { applyLayers, removeLayers } from "./layers/apply";
 import { fixTargetsFingerprint, syncExtensionFixes } from "./fixes/apply";
 
+// Whether the user last chose Enable (true) or Disable (false); undefined on installs older than 0.5.5.
+const WANTED_KEY = "translucent.wanted";
+
 async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
   const prev = context.globalState.get<string>("version");
   const current = context.extension.packageJSON.version;
   await context.globalState.update("version", current);
-
-  if (!prev || compareVersions(current, prev) <= 0) {
+  // A VS Code update replaces main.js / workbench.html and drops the patch without this extension changing at all
+  // (1 Oct 2026: 0.5.x never re-patched, because only the extension's own version was watched).
+  const prevCode = context.globalState.get<string>("vscodeVersion");
+  await context.globalState.update("vscodeVersion", vscode.version);
+  const extUpdated = !!prev && compareVersions(current, prev) > 0;
+  const codeUpdated = !!prevCode && prevCode !== vscode.version;
+  // Nothing changed and the choice is already known: skip reading the (large) patched files.
+  if (!extUpdated && !codeUpdated && context.globalState.get<boolean>(WANTED_KEY) !== undefined) {
     return;
   }
 
@@ -31,8 +40,16 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
       mainJs.isPatched(fs.readFileSync(paths.mainJs, "utf-8"))) ||
     (fs.existsSync(paths.workbenchJs) &&
       workbenchJs.isPatched(fs.readFileSync(paths.workbenchJs, "utf-8")));
+  // Installs from before WANTED_KEY existed: a patch on disk means the user enabled it.
+  if (isPatched && context.globalState.get<boolean>(WANTED_KEY) === undefined) {
+    await context.globalState.update(WANTED_KEY, true);
+  }
+  if (!extUpdated && !codeUpdated) {
+    return;
+  }
 
-  if (!isPatched) {
+  // Re-patch when a patch is still there to refresh, or when the user chose Enable and an update wiped it.
+  if (!isPatched && context.globalState.get<boolean>(WANTED_KEY) !== true) {
     return;
   }
 
@@ -116,14 +133,14 @@ export function activate(context: vscode.ExtensionContext) {
         await applyLayers(context).catch((err: unknown) => handleError("apply layers", err));
       }
     }),
-    vscode.commands.registerCommand(
-      "vscode-translucent.enable",
-      enableTranslucent,
-    ),
-    vscode.commands.registerCommand(
-      "vscode-translucent.disable",
-      disableTranslucent,
-    ),
+    vscode.commands.registerCommand("vscode-translucent.enable", async () => {
+      await context.globalState.update(WANTED_KEY, true);
+      return enableTranslucent();
+    }),
+    vscode.commands.registerCommand("vscode-translucent.disable", async () => {
+      await context.globalState.update(WANTED_KEY, false);
+      return disableTranslucent();
+    }),
     vscode.workspace.onDidChangeConfiguration(async (e) => {
       if (!e.affectsConfiguration("vscode-translucent")) {
         return;
