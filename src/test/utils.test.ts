@@ -117,6 +117,18 @@ describe("Utils & CSS Builder Tests", () => {
   });
 
   describe("buildCSS", () => {
+    it("clears modern painted edges only for disabled container borders", () => {
+      const css = buildCSS({ editorContainerBorderVisible: false, leftSidebarContainerBorderVisible: true });
+      assert.ok(css.includes(".monaco-workbench.monaco-workbench.floating-panels .part.editor {\n  border: none !important;\n  background-image: none !important;"));
+      assert.ok(!css.includes(".monaco-workbench.monaco-workbench.floating-panels .part.sidebar {"));
+    });
+
+    it("uses one shared backdrop only when a valid surface colour is set", () => {
+      const shared = ".monaco-workbench.monaco-workbench.monaco-workbench .part.part:is(.editor, .sidebar, .auxiliarybar, .panel, .activitybar)";
+      assert.ok(buildCSS({ surfaceColor: "#11223344" }).includes(shared));
+      assert.ok(!buildCSS({}).includes(shared));
+      assert.ok(!buildCSS({ surfaceColor: "invalid" }).includes(shared));
+    });
     it("generates root CSS variables and contains necessary selectors", () => {
       const css = buildCSS({
         opacity: 0.7,

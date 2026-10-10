@@ -98,6 +98,8 @@ export const SURFACE_BORDERS = [
   "activityBar.border", "sideBar.border", "panel.border", "editorGroup.border",
   "sideBySideEditor.horizontalBorder", "sideBySideEditor.verticalBorder", "titleBar.border", "statusBar.border",
   "sideBarActivityBarTop.border", "panelSection.border",
+  // Modern floating/compact panes use these for both borders and painted edges.
+  "surface.border", "editor.border", "modernPanel.border", "modernActivityBar.border",
 ];
 
 /** Lines inside panels and around controls (tabs, headers, menus, inputs, buttons): cleared with a surface set. */
@@ -282,6 +284,11 @@ export function buildColorMap(s: ColorSettings): Record<string, string> {
   }
   if (s.softBorders) {
     Object.assign(out, SOFT_BORDER_KEYS);
+    // The explicit shared border colour also owns the panel edge. Do not let
+    // the preset's soft-border fallback paint that one edge back in.
+    if (surface) {
+      out["panel.border"] = (parseHex(s.borders) ? withAlpha(s.borders, 1) : undefined) ?? "#00000000";
+    }
   }
   const remoteHover = solid(s.statusBarRemoteHover);
   if (remoteHover) {

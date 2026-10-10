@@ -17,6 +17,7 @@ export function normalizeOptions(opts: CSSOptions = 0.4): NormalizedCSSOptions {
 
   return {
     baseOpacity,
+    surfaceColor: withAlpha(o.surfaceColor, 1),
     editorOpacity,
     leftSidebarOpacity,
     rightSidebarOpacity,

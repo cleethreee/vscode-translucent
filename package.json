@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.5.4",
+  "version": "0.5.6",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -93,7 +93,7 @@
             "default": 0.4,
             "minimum": 0,
             "maximum": 1,
-            "description": "Default background opacity of the workbench UI (0 = fully transparent, 1 = opaque)."
+            "markdownDescription": "Default background opacity of the workbench UI (0 = fully transparent, 1 = opaque). **The window background uses Surface: Color instead when it is set.** This setting can still affect some widget effects."
           }
         }
       },
@@ -106,7 +106,7 @@
             "default": "",
             "format": "color",
             "order": 0,
-            "markdownDescription": "**One colour for the whole window.** Tints every outer surface once (editor, sidebars, activity bar, panel, title bar, status bar) and clears everything that sits on top of them (tabs, section headers, the search box, gutters and so on), so nothing is painted twice. Use a see-through colour, e.g. `#0a0f0c33`. With this set, every panel's glass is full automatically (the panel glass settings are ignored) and the settings page follows it, so this colour's transparency is the one knob. Layers, accent and text colours are applied on top, so those are the only things you customise. Leave empty to keep the theme's colours."
+            "markdownDescription": "**One colour for the whole window.** Tints every outer surface once (editor, sidebars, activity bar, panel, title bar, status bar) and clears everything that sits on top of them (tabs, section headers, the search box, gutters and so on), so nothing is painted twice. Use a see-through colour, e.g. `#0a0f0c33`. With this set, every panel's glass is full automatically (the panel glass settings are ignored) and the settings page follows it, so this colour's transparency is the one knob. Layers, accent and text colours are applied on top, so those are the only things you customise. Leave empty to keep the theme's colours. **Transparency examples:** `#1c1c1c33` = 20% opaque, `#1c1c1c66` = 40%, `#1c1c1ccc` = 80%, and `#1c1c1c` = fully opaque."
           },
           "vscode-translucent.surface.borderColor": {
             "type": "string",
@@ -161,7 +161,7 @@
             "minimum": 0,
             "maximum": 1,
             "order": 3,
-            "markdownDescription": "**Inputs (text boxes, chat boxes, search fields)**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+            "markdownDescription": "**Inputs (text boxes, chat boxes, search fields)**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's. **Still applies when Surface: Color is set.** This multiplies any transparency in the layer colour. Use a six-digit colour such as `#1c1c1c` with `0.8` here for 80% opacity; `#1c1c1c33` with `0.8` is only 16% opaque."
           },
           "vscode-translucent.layers.menus.color": {
             "type": "string",
@@ -174,7 +174,7 @@
             "minimum": 0,
             "maximum": 1,
             "order": 5,
-            "markdownDescription": "**Menus and dropdowns**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+            "markdownDescription": "**Menus and dropdowns**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's. **Still applies when Surface: Color is set.** This multiplies any transparency in the layer colour. Use a six-digit colour such as `#1c1c1c` with `0.8` here for 80% opacity; `#1c1c1c33` with `0.8` is only 16% opaque."
           },
           "vscode-translucent.layers.widgets.color": {
             "type": "string",
@@ -187,7 +187,7 @@
             "minimum": 0,
             "maximum": 1,
             "order": 7,
-            "markdownDescription": "**Editor flyouts (hover, suggestions, find)**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+            "markdownDescription": "**Editor flyouts (hover, suggestions, find)**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's. **Still applies when Surface: Color is set.** This multiplies any transparency in the layer colour. Use a six-digit colour such as `#1c1c1c` with `0.8` here for 80% opacity; `#1c1c1c33` with `0.8` is only 16% opaque."
           },
           "vscode-translucent.layers.quickInput.color": {
             "type": "string",
@@ -200,7 +200,7 @@
             "minimum": 0,
             "maximum": 1,
             "order": 9,
-            "markdownDescription": "**Command palette and quick pick**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+            "markdownDescription": "**Command palette and quick pick**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's. **Still applies when Surface: Color is set.** This multiplies any transparency in the layer colour. Use a six-digit colour such as `#1c1c1c` with `0.8` here for 80% opacity; `#1c1c1c33` with `0.8` is only 16% opaque."
           },
           "vscode-translucent.layers.notifications.color": {
             "type": "string",
@@ -213,7 +213,7 @@
             "minimum": 0,
             "maximum": 1,
             "order": 11,
-            "markdownDescription": "**Notifications**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+            "markdownDescription": "**Notifications**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's. **Still applies when Surface: Color is set.** This multiplies any transparency in the layer colour. Use a six-digit colour such as `#1c1c1c` with `0.8` here for 80% opacity; `#1c1c1c33` with `0.8` is only 16% opaque."
           },
           "vscode-translucent.layers.tabStrip.color": {
             "type": "string",
@@ -226,14 +226,14 @@
             "minimum": 0,
             "maximum": 1,
             "order": 13,
-            "markdownDescription": "**Editor tab strip**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's."
+            "markdownDescription": "**Editor tab strip**: how solid the layer is, from `0` (clear) to `1` (solid). Leave unset to use the preset's. **Still applies when Surface: Color is set.** This multiplies any transparency in the layer colour. Use a six-digit colour such as `#1c1c1c` with `0.8` here for 80% opacity; `#1c1c1c33` with `0.8` is only 16% opaque."
           },
           "vscode-translucent.settingsPage.color": {
             "type": "string",
             "format": "color-hex",
             "default": "#221716",
             "order": 20,
-            "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: colour of the page behind them. Needs a window reload (you'll be asked)."
+            "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: colour of the page behind them. Needs a window reload (you'll be asked). **Ignored while Surface: Color is set.** Change the transparency in Surface: Color instead (for example, `#1c1c1ccc` is 80% opaque). Clear Surface: Color to use this setting again."
           },
           "vscode-translucent.settingsPage.opacity": {
             "type": "number",
@@ -241,7 +241,7 @@
             "minimum": 0,
             "maximum": 1,
             "order": 21,
-            "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: how solid that page is, from `0` (off, fully see-through) to `1` (solid). Try `0.85`."
+            "markdownDescription": "**Settings, Keyboard Shortcuts and extension pages**: how solid that page is, from `0` (off, fully see-through) to `1` (solid). Try `0.85`. **Ignored while Surface: Color is set.** Change the transparency in Surface: Color instead (for example, `#1c1c1ccc` is 80% opaque). Clear Surface: Color to use this setting again."
           },
           "vscode-translucent.layers.softBorders": {
             "type": "boolean",
@@ -302,7 +302,7 @@
             "default": 0.4,
             "minimum": 0,
             "maximum": 1,
-            "description": "Background opacity of the editor container (0 = fully transparent, 1 = opaque)."
+            "markdownDescription": "Background opacity of the editor container (0 = fully transparent, 1 = opaque). **Ignored while Surface: Color is set.** Change the transparency in Surface: Color instead (for example, `#1c1c1ccc` is 80% opaque). Clear Surface: Color to use this setting again."
           },
           "vscode-translucent.leftSidebarContainerBackgroundOpacity": {
             "order": 2,
@@ -310,7 +310,7 @@
             "default": 0.8,
             "minimum": 0,
             "maximum": 1,
-            "description": "Background opacity of the left sidebar container (0 = fully transparent, 1 = opaque)."
+            "markdownDescription": "Background opacity of the left sidebar container (0 = fully transparent, 1 = opaque). **Ignored while Surface: Color is set.** Change the transparency in Surface: Color instead (for example, `#1c1c1ccc` is 80% opaque). Clear Surface: Color to use this setting again."
           },
           "vscode-translucent.rightSidebarContainerBackgroundOpacity": {
             "order": 3,
@@ -318,7 +318,7 @@
             "default": 0.8,
             "minimum": 0,
             "maximum": 1,
-            "description": "Background opacity of the right sidebar (auxiliary bar) container (0 = fully transparent, 1 = opaque)."
+            "markdownDescription": "Background opacity of the right sidebar (auxiliary bar) container (0 = fully transparent, 1 = opaque). **Ignored while Surface: Color is set.** Change the transparency in Surface: Color instead (for example, `#1c1c1ccc` is 80% opaque). Clear Surface: Color to use this setting again."
           }
         }
       },
@@ -386,7 +386,7 @@
             "default": 0,
             "minimum": 0,
             "maximum": 1,
-            "description": "Background opacity of the side activity bar container (0 = fully transparent, 1 = opaque)."
+            "markdownDescription": "Background opacity of the side activity bar container (0 = fully transparent, 1 = opaque). **Ignored while Surface: Color is set.** Change the transparency in Surface: Color instead (for example, `#1c1c1ccc` is 80% opaque). Clear Surface: Color to use this setting again."
           },
           "vscode-translucent.activityBarContainerMargin": {
             "order": 3,
@@ -504,5 +504,8 @@
   },
   "overrides": {
     "serialize-javascript": "^7.1.0"
-  }
+  },
+  "extensionKind": [
+    "ui"
+  ]
 }

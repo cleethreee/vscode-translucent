@@ -84,12 +84,57 @@ export function buildCSS(opts: CSSOptions = 0.75): string {
     chunks.push(borderActivityBarHiddenCss);
   }
 
+  // Modern compact panes draw their edges with background gradients as well as
+  // borders. Clear both, only for the containers whose border switch is off.
+  for (const [part, visible] of [
+    ["editor", normalized.editorBorderVisible],
+    ["sidebar", normalized.leftSidebarBorderVisible],
+    ["auxiliarybar", normalized.rightSidebarBorderVisible],
+    ["activitybar", normalized.activityBarBorderVisible],
+  ] as const) {
+    if (!visible) {
+      chunks.push(`.monaco-workbench.monaco-workbench.floating-panels .part.${part} {
+  border: none !important;
+  background-image: none !important;
+}`);
+    }
+  }
+
   chunks.push(widgetsCss);
 
   if (normalized.settingsPageBackground) {
     // Settings, Keyboard Shortcuts and extension detail pages are long reading pages; give them their own layer.
     chunks.push(`.settings-editor, .settings-editor > .settings-body, .keybindings-editor, .extension-editor {
   background-color: ${normalized.settingsPageBackground} !important;
+}`);
+  }
+
+  if (normalized.surfaceColor) {
+    // Paint the glass once behind every workbench region. The regular rules above paint
+    // editor groups and sidebars separately, which stacks alpha and creates dark seams.
+    chunks.push(`.monaco-workbench {
+  background-color: var(--vscode-editor-background) !important;
+}
+.monaco-workbench > .monaco-grid-view,
+.monaco-workbench.monaco-workbench.monaco-workbench .part.part:is(.editor, .sidebar, .auxiliarybar, .panel, .activitybar),
+.monaco-workbench.monaco-workbench.monaco-workbench .part.part:is(.sidebar, .auxiliarybar, .panel) .monaco-pane-view .pane,
+.monaco-workbench.monaco-workbench.monaco-workbench .part.part.panel .pane-header:not(:hover),
+.monaco-workbench .part.editor,
+.monaco-workbench .part.editor > .content,
+.monaco-workbench .part.editor > .content .editor-group-container,
+div#workbench.parts.sidebar,
+div#workbench.parts.auxiliarybar,
+.monaco-workbench .part.sidebar,
+.monaco-workbench .part.auxiliarybar,
+.monaco-workbench.style-override.floating-panels .part.sidebar,
+.monaco-workbench.style-override.floating-panels .part.auxiliarybar,
+.monaco-workbench.modern-ui.floating-panels .part.sidebar,
+.monaco-workbench.modern-ui.floating-panels .part.auxiliarybar,
+.monaco-workbench .part.activitybar,
+.monaco-workbench .part.panel,
+.monaco-workbench .part.titlebar,
+.monaco-workbench .part.statusbar {
+  background-color: transparent !important;
 }`);
   }
 

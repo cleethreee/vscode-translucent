@@ -14,6 +14,7 @@ export function getConfig(): TranslucentConfig {
   return {
     effect: cfg.get<EffectType>("effect", "mica"),
     opacity: defaultOpacity,
+    surfaceColor: surface || undefined,
     editorContainerBorderVisible: cfg.get<boolean>("editorContainerBorderVisible", true),
     leftSidebarContainerBorderVisible: cfg.get<boolean>("leftSidebarContainerBorderVisible", true),
     rightSidebarContainerBorderVisible: cfg.get<boolean>("rightSidebarContainerBorderVisible", true),

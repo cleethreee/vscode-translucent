@@ -3,6 +3,7 @@ export type EffectType = "mica" | "acrylic" | "tabbed" | "auto" | "none";
 export interface TranslucentConfig {
   effect: EffectType;
   opacity: number;
+  surfaceColor?: string;
   editorContainerBorderVisible: boolean;
   leftSidebarContainerBorderVisible: boolean;
   rightSidebarContainerBorderVisible: boolean;

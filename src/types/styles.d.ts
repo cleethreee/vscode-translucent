@@ -15,6 +15,7 @@ export type CSSOptions = (Partial<TranslucentConfig> & {
 
 export interface NormalizedCSSOptions {
   baseOpacity: number;
+  surfaceColor?: string;
   editorOpacity: number;
   leftSidebarOpacity: number;
   rightSidebarOpacity: number;

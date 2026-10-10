@@ -131,6 +131,14 @@ describe("theme blocks", () => {
 });
 
 describe("surface: one colour for the whole window", () => {
+  it("keeps modern pane edges clear even with the soft-border preset enabled", () => {
+    const map = buildColorMap({ layers: {}, surface: "#0a0f0c33", softBorders: true });
+    for (const key of ["surface.border", "editor.border", "modernPanel.border", "modernActivityBar.border", "panel.border"]) {
+      assert.strictEqual(map[key], "#00000000", key);
+    }
+    const colored = buildColorMap({ layers: {}, surface: "#0a0f0c33", borders: "#11223344", softBorders: true });
+    assert.strictEqual(colored["panel.border"], "#11223344");
+  });
   it("tints every outer surface once, clears what sits on top, and draws every line in one colour", () => {
     const map = buildColorMap({ layers: {}, surface: "#0a0f0c33" });
     for (const k of SURFACE_OUTER) { assert.strictEqual(map[k], "#0a0f0c33", k); }

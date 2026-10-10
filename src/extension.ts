@@ -20,11 +20,13 @@ const WANTED_KEY = "translucent.wanted";
 async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
   const prev = context.globalState.get<string>("version");
   const current = context.extension.packageJSON.version;
-  await context.globalState.update("version", current);
   // A VS Code update replaces main.js / workbench.html and drops the patch without this extension changing at all
   // (1 Oct 2026: 0.5.x never re-patched, because only the extension's own version was watched).
   const prevCode = context.globalState.get<string>("vscodeVersion");
-  await context.globalState.update("vscodeVersion", vscode.version);
+  const recordVersions = async () => {
+    await context.globalState.update("version", current);
+    await context.globalState.update("vscodeVersion", vscode.version);
+  };
   const extUpdated = !!prev && compareVersions(current, prev) > 0;
   const codeUpdated = !!prevCode && prevCode !== vscode.version;
   // Nothing changed and the choice is already known: skip reading the (large) patched files.
@@ -45,11 +47,13 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
     await context.globalState.update(WANTED_KEY, true);
   }
   if (!extUpdated && !codeUpdated) {
+    await recordVersions();
     return;
   }
 
   // Re-patch when a patch is still there to refresh, or when the user chose Enable and an update wiped it.
   if (!isPatched && context.globalState.get<boolean>(WANTED_KEY) !== true) {
+    await recordVersions();
     return;
   }
 
@@ -62,6 +66,8 @@ async function checkAutoPatchOnUpdate(context: vscode.ExtensionContext) {
       workbenchHtml.patch(paths.workbenchHtml, config),
       workbenchJs.patch(paths.workbenchJs),
     ].some(Boolean);
+    // A failed patch must stay pending so the next startup retries it.
+    await recordVersions();
     if (!changed) {
       return;
     }
