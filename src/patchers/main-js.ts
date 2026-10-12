@@ -8,7 +8,16 @@ export function isPatched(content: string): boolean {
   return MARKER_RE.test(content);
 }
 
-export function patch(filePath: string, effect: EffectType): boolean {
+// backgroundMaterial is Windows 11 only; macOS ignores it, and a clear window with no material leaves old frames on
+// screen (the fog on the Mac, 11 Oct 2026). On a Mac every effect asks for macOS's own glass instead.
+const MAC_VIBRANCY: Record<Exclude<EffectType, "none">, string> = {
+  mica: "hud",
+  acrylic: "hud",
+  tabbed: "hud",
+  auto: "hud",
+};
+
+export function patch(filePath: string, effect: EffectType, platform: NodeJS.Platform = process.platform): boolean {
   const original = fs.readFileSync(filePath, "utf-8");
   let content = original;
   if (isPatched(content)) {
@@ -51,7 +60,12 @@ export function patch(filePath: string, effect: EffectType): boolean {
       `Could not find expected code in main.js for patch: experimentalDarkMode: !0`
     );
   }
-  if (effect !== "none") {
+  if (effect !== "none" && platform === "darwin") {
+    content = content.replace(
+      expDarkRe,
+      `experimentalDarkMode:$1,transparent:!0,vibrancy:"${MAC_VIBRANCY[effect]}",visualEffectState:"active"/*${MARKER}*/`
+    );
+  } else if (effect !== "none") {
     content = content.replace(
       expDarkRe,
       `experimentalDarkMode:$1,backgroundMaterial:"${effect}"/*${MARKER}*/`
@@ -82,8 +96,13 @@ export function doUnpatch(content: string): string {
     /\b((?:this|[\w$]+(?:\.[\w$]+)?)\.setBackgroundColor\()"#00000000"\)\s*\/\*vscode-translucent-patched\*\//g,
     `$1"#FFFFFF")`
   ).replace(
-    /\bexperimentalDarkMode\s*:\s*(!0|true)\s*,\s*(?:backgroundMaterial\s*:\s*"[^"]*"|transparent\s*:\s*!0|transparent\s*:\s*true)\s*\/\*vscode-translucent-patched\*\//g,
+    /\bexperimentalDarkMode\s*:\s*(!0|true)\s*,\s*(?:backgroundMaterial\s*:\s*"[^"]*"|transparent\s*:\s*(?:!0|true)(?:\s*,\s*vibrancy\s*:\s*"[^"]*"\s*,\s*visualEffectState\s*:\s*"[^"]*")?)\s*\/\*vscode-translucent-patched\*\//g,
     `experimentalDarkMode: $1`
+  ).replace(
+    // A tail stranded when an older Translucent patched over a newer one (11 Oct 2026): it kept the Mac glass on
+    // under "none", and as the later duplicate key it overrode whatever material came first.
+    /\s*,\s*transparent\s*:\s*(?:!0|true)\s*,\s*vibrancy\s*:\s*"[^"]*"\s*,\s*visualEffectState\s*:\s*"[^"]*"\s*\/\*vscode-translucent-patched\*\//g,
+    ""
   );
 }
 

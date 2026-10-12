@@ -2,7 +2,7 @@
   "name": "vscode-translucent",
   "displayName": "vscode-translucent",
   "description": "A Visual Studio Code extension that applies a native translucent backdrop effect to the editor window on Windows 11.",
-  "version": "0.5.6",
+  "version": "0.5.9",
   "engines": {
     "vscode": "^1.102.0"
   },
@@ -449,6 +449,13 @@
             "format": "color",
             "order": 0.65,
             "markdownDescription": "**Claude Code:** the background of the band behind each of your messages and of the IN/OUT tool boxes. Claude paints both with the editor colour, so on a tinted see-through editor they show as a second, darker layer. `#00000000` makes it flush with the editor. Leave empty to keep Claude's own.\n\nA marked block in Claude Code's stylesheet, re-applied after updates and taken out when cleared."
+          },
+          "vscode-translucent.extensionFixes.claudeMessageListBackground": {
+            "type": "string",
+            "default": "",
+            "format": "color",
+            "order": 0.66,
+            "markdownDescription": "**Claude Code:** the background of the message list and, with Claude open as an editor tab, the panel underneath it. Claude paints both with the editor colour, so on a tinted see-through editor the Claude column carries extra coats of your tint and comes out darker than the rest of the window. `#00000000` leaves the editor's one coat, so the surface colour looks the same there as everywhere else. Leave empty to keep Claude's own.\n\nA marked block in Claude Code's stylesheet, re-applied after updates and taken out when cleared."
           },
           "vscode-translucent.extensionFixes.claudePinnedMessageBackground": {
             "type": "string",

@@ -74,17 +74,23 @@ describe("Patcher Tests", () => {
         assert.strictEqual(mainJs.isPatched(variant.content), false);
 
         // Patch with mica
-        mainJs.patch(filePath, "mica");
+        mainJs.patch(filePath, "mica", "win32");
         let patchedContent = fs.readFileSync(filePath, "utf-8");
         assert.strictEqual(mainJs.isPatched(patchedContent), true);
         assert.ok(patchedContent.includes('backgroundColor:"#00000000"'));
         assert.ok(patchedContent.includes('backgroundMaterial:"mica"'));
 
         // Repatch with acrylic
-        mainJs.patch(filePath, "acrylic");
+        mainJs.patch(filePath, "acrylic", "win32");
         patchedContent = fs.readFileSync(filePath, "utf-8");
         assert.strictEqual(mainJs.isPatched(patchedContent), true);
         assert.ok(patchedContent.includes('backgroundMaterial:"acrylic"'));
+
+        // On a Mac the effect becomes macOS vibrancy, never backgroundMaterial
+        mainJs.patch(filePath, "acrylic", "darwin");
+        patchedContent = fs.readFileSync(filePath, "utf-8");
+        assert.ok(patchedContent.includes('vibrancy:"hud"'));
+        assert.ok(!patchedContent.includes("backgroundMaterial"));
 
         // Unpatch
         mainJs.unpatch(filePath);

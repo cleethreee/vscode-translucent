@@ -70,7 +70,12 @@ async function findInstalls(extensionId: string): Promise<vscode.Uri[]> {
         return [];
       }
     };
-    const homes = ["/root", ...(await list(at("/home"))).filter(([, t]) => t & vscode.FileType.Directory).map(([n]) => `/home/${n}`)];
+    // Linux keeps homes in /home, a Mac remote (the leaf tunnel, 10 Oct 2026) in /Users: only /home was looked in, so
+    // the tunnel's Claude Code was never found and its panel lost every fix after the move to the Mac.
+    const homes = ["/root"];
+    for (const parent of ["/home", "/Users"]) {
+      homes.push(...(await list(at(parent))).filter(([, t]) => t & vscode.FileType.Directory).map(([n]) => `${parent}/${n}`));
+    }
     for (const home of homes) {
       const dir = `${home}/.vscode-server/extensions`;
       for (const [name, type] of await list(at(dir))) {

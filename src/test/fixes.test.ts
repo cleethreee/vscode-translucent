@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { antigravityCss, antigravityGlass, claudeMessageRows, claudeToolBoxes, claudeUserBar, claudeUserDot, MARK } from "../fixes/patches";
+import { antigravityCss, antigravityGlass, claudeMessageList, claudeMessageRows, claudeToolBoxes, claudeUserBar, claudeUserDot, MARK } from "../fixes/patches";
 import { buildColorMap, PRESETS } from "../layers/colors";
 
 describe("other extensions: Claude Code", () => {
@@ -104,5 +104,22 @@ describe("other extensions: Claude message rows and tool boxes", () => {
 
   it("skips anything that isn't a hex colour", () => {
     assert.strictEqual(claudeMessageRows.patch(css, "none; } body {"), undefined);
+  });
+});
+
+describe("other extensions: Claude message list", () => {
+  const css = ".messagesContainer_07S1Yg{background:var(--app-primary-background)}.root_aqhumA.editorMode_aqhumA{background:var(--app-secondary-background)}";
+
+  it("clears the list and the editor-mode root, and takes it out again", () => {
+    const clear = claudeMessageList.patch(css, "#00000000")!;
+    assert.ok(clear.includes('[class*="messagesContainer_"]') && clear.includes('[class*="root_"][class*="editorMode_"]'));
+    assert.ok(clear.includes("background-color:#00000000 !important"));
+    assert.ok(claudeMessageList.isPatched(clear, "#00000000"));
+    assert.strictEqual(claudeMessageList.unpatch!(clear), css);
+  });
+
+  it("shares the stylesheet with the row fix without undoing it", () => {
+    const both = claudeMessageList.patch(claudeMessageRows.patch(css, "#00000000")!, "#00000000")!;
+    assert.ok(claudeMessageRows.isPatched(both, "#00000000") && claudeMessageList.isPatched(both, "#00000000"));
   });
 });

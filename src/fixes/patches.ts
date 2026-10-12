@@ -121,6 +121,16 @@ const rows = blockFix("message-rows", "claudeMessageBackground", "the message ro
   + `${TOOL}{background:${c} !important}`);
 export const claudeMessageRows = rows.fix;
 
+// Under the rows, the panel itself paints the editor colour twice more: the message list (.messagesContainer) and,
+// with Claude open as an editor tab, its root (.root.editorMode). On a tinted see-through editor that is three coats
+// of one tint, so the Claude column came out far darker than the rest of the window. Proven by colouring each layer
+// on 11 Oct 2026 (Clee: "that is the last setting to change, which should tie into the main color"). Clear makes the
+// editor's one coat the only one, so the surface colour means the same thing in the Claude column as everywhere else.
+const LIST = '[class*="messagesContainer_"],[class*="root_"][class*="editorMode_"]';
+const list = blockFix("message-list", "claudeMessageListBackground", "the message list", (c) =>
+  `${LIST}{background-color:${c} !important}`);
+export const claudeMessageList = list.fix;
+
 // Antigravity embeds its chat page (served by the agy hub on localhost) in an iframe. Chromium paints an opaque
 // backdrop behind an iframe whose colour scheme differs from its embedder, so the panel came out black; declaring
 // the scheme and a transparent background fixes that. The page's own colours can't be set from outside, so the
@@ -153,7 +163,7 @@ export const antigravityGlass: ExtensionFix = {
 
 // The mask fix comes before the bar: turning the mask fix off restores Claude's original stylesheet, and the bar is
 // then added back in the same pass.
-export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, claudeMessageRows, antigravityGlass];
+export const FIXES: ExtensionFix[] = [claudeToolBoxes, claudeUserBar, claudeUserDot, claudePinnedMessage, claudeMessageRows, claudeMessageList, antigravityGlass];
 
 /** The CSS the proxy adds to Antigravity's chat page: its input box and bubbles get the inputs layer colour. */
 export function antigravityCss(inputColor: string): string {
